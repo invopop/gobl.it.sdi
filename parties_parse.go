@@ -1,7 +1,7 @@
 package fatturapa
 
 import (
-	"github.com/invopop/gobl/addons/it/sdi"
+	sdi "github.com/invopop/gobl.fatturapa/addon"
 	"github.com/invopop/gobl/cbc"
 	"github.com/invopop/gobl/l10n"
 	"github.com/invopop/gobl/org"
