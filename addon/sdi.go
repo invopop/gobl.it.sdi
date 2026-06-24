@@ -49,6 +49,7 @@ func init() {
 		norm.For(normalizePayRecord),
 		norm.For(normalizeAddress),
 		norm.For(normalizeTaxCombo),
+		norm.For(normalizeStatus),
 	)
 }
 
