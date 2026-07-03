@@ -35,6 +35,8 @@ func init() {
 		is.InContext(tax.AddonIn(V1)),
 		billInvoiceRules(),
 		billChargeRules(),
+		billStatusRules(),
+		billStatusLineRules(),
 		orgAddressRules(),
 		orgAttributeRules(),
 		taxComboRules(),
