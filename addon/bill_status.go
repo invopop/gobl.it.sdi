@@ -26,8 +26,14 @@ func normalizeStatusLine(st *bill.Status, line *bill.StatusLine) {
 		return
 	}
 	switch line.Ext.Get(ExtKeyNotification) {
-	case "RC", "AT":
+	case "RC":
 		line.Key, st.Type = bill.StatusLineAcknowledged, bill.StatusTypeUpdate
+	case "AT":
+		// The recipient never received the invoice, so acknowledged
+		// (buyer received a readable message) would misreport. The
+		// sender must still deliver the invoice, with the attestation,
+		// outside SDI.
+		line.Key, st.Type = bill.StatusLineError, bill.StatusTypeUpdate
 	case "DT":
 		line.Key, st.Type = bill.StatusLineAccepted, bill.StatusTypeUpdate
 	case "NS":

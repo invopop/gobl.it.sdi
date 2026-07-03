@@ -1176,7 +1176,7 @@ var extensions = []*cbc.Definition{
 					i18n.IT: "Attestazione di Trasmissione",
 				},
 				Desc: i18n.String{
-					i18n.EN: "Public-administration recipients only: legal proof of transmission when delivery was impossible.",
+					i18n.EN: "Public-administration recipients only: legal proof of transmission when delivery was impossible. The invoice remains valid; the sender must deliver it, together with the attestation, to the recipient outside SDI.",
 				},
 			},
 			{
@@ -1186,7 +1186,7 @@ var extensions = []*cbc.Definition{
 					i18n.IT: "Decorrenza Termini",
 				},
 				Desc: i18n.String{
-					i18n.EN: "Public-administration recipients only: accepted by silence after 15 days.",
+					i18n.EN: "Public-administration recipients only: no accept or reject received within 15 days; SDI closes the process and the invoice can no longer be rejected.",
 				},
 			},
 			{

@@ -20,7 +20,7 @@ func TestNormalizeStatusFromNotification(t *testing.T) {
 		typ    cbc.Key  // expected Status.Type
 	}{
 		{"RC", "RC", "", bill.StatusLineAcknowledged, bill.StatusTypeUpdate},
-		{"AT", "AT", "", bill.StatusLineAcknowledged, bill.StatusTypeUpdate},
+		{"AT", "AT", "", bill.StatusLineError, bill.StatusTypeUpdate},
 		{"DT", "DT", "", bill.StatusLineAccepted, bill.StatusTypeUpdate},
 		{"MC B2B", "MC", "FPR12", bill.StatusLineAcknowledged, bill.StatusTypeUpdate},
 		{"MC PA", "MC", "FPA12", bill.StatusLineProcessing, bill.StatusTypeUpdate},
