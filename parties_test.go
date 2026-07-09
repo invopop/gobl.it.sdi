@@ -83,6 +83,22 @@ func TestPartiesSupplier(t *testing.T) {
 		assert.Equal(t, "0000000", s.Identity.TaxID.Code)
 	})
 
+	t.Run("should keep supplier Tax ID for Greek company (EL tax country code)", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Supplier.TaxID.Code = "925667500"
+			inv.Supplier.TaxID.Country = l10n.EL.Tax()
+		})
+
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		s := doc.Header.Supplier
+
+		assert.Equal(t, "EL", s.Identity.TaxID.Country)
+		assert.Equal(t, "925667500", s.Identity.TaxID.Code)
+	})
+
 	t.Run("should replace supplier ID info for non-EU company with Tax ID given", func(t *testing.T) {
 		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
 		test.ModifyInvoice(env, func(inv *bill.Invoice) {

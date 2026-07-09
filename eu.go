@@ -14,7 +14,7 @@ var euCountries = []l10n.Code{
 	l10n.FI, // Finland
 	l10n.FR, // France
 	l10n.DE, // Germany
-	l10n.GR, // Greece
+	l10n.EL, // Greece
 	l10n.HU, // Hungary
 	l10n.IE, // Ireland
 	l10n.IT, // Italy
