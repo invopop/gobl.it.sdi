@@ -83,6 +83,12 @@
 			"quantity": "1.000000",
 			"item": {
 				"name": "LENOVO",
+				"attributes": [
+					{
+						"type": "DATI LOTTO",
+						"text": "Id: 2811 - QtÃ : 1"
+					}
+				],
 				"price": "101.750000",
 				"unit": "PZ"
 			},
@@ -104,6 +110,12 @@
 			"quantity": "1.000000",
 			"item": {
 				"name": "LCD LENOVO",
+				"attributes": [
+					{
+						"type": "DATI LOTTO",
+						"text": "Id: 2345 - QtÃ : 1"
+					}
+				],
 				"description": "(Unit: pz)",
 				"price": "36.890000"
 			},

@@ -121,11 +121,15 @@ func goblBillInvoiceAddLineDetails(inv *bill.Invoice, lineDetails []*LineDetail,
 			line.Taxes = append(line.Taxes, vatCombo)
 		}
 
-		// Check for INVCONT in AltriDatiGestionali
+		// Map AltriDatiGestionali blocks: the INVCONT marker sets the
+		// reverse-charge tag, everything else becomes an item attribute (BG-32).
 		for _, od := range detail.OtherData {
 			if od.DataType == tipoDatoINVCONT {
 				inv.SetTags(tax.TagReverseCharge)
-				break
+				continue
+			}
+			if attr := otherDataToAttribute(od); attr != nil {
+				line.Item.Attributes = append(line.Item.Attributes, attr)
 			}
 		}
 
@@ -144,6 +148,40 @@ func goblBillInvoiceAddLineDetails(inv *bill.Invoice, lineDetails []*LineDetail,
 	}
 
 	return nil
+}
+
+// otherDataToAttribute converts a FatturaPA AltriDatiGestionali block into a GOBL
+// item attribute (EN 16931 BG-32). The TipoDato (BT-160) becomes the attribute
+// type, and the populated reference field (BT-161) becomes the matching value:
+// RiferimentoTesto to text, RiferimentoNumero to amount, RiferimentoData to date.
+func otherDataToAttribute(od *OtherData) *org.Attribute {
+	if od == nil || od.DataType == "" {
+		return nil
+	}
+	a := &org.Attribute{Type: cbc.Code(od.DataType)}
+	switch {
+	case od.TextReference != "":
+		a.Text = od.TextReference
+	case od.NumReference != "":
+		amount, err := parseAmount(od.NumReference)
+		if err != nil {
+			// Preserve the raw value rather than dropping the attribute.
+			a.Text = od.NumReference
+		} else {
+			a.Amount = &amount
+		}
+	case od.DateReference != "":
+		date, err := parseDate(od.DateReference)
+		if err != nil {
+			a.Text = od.DateReference
+		} else {
+			a.Date = &date
+		}
+	default:
+		// TipoDato with no reference value has nothing to map to a GOBL value.
+		return nil
+	}
+	return a
 }
 
 // goblBillLinesAddTaxSummary matches tax summary liability information with line items

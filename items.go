@@ -6,6 +6,7 @@ import (
 	"github.com/invopop/gobl/addons/it/sdi"
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/i18n"
+	"github.com/invopop/gobl/org"
 	"github.com/invopop/gobl/tax"
 )
 
@@ -118,10 +119,48 @@ func generateLineDetails(inv *bill.Invoice) []*LineDetail {
 			}
 		}
 
+		// Map item attributes (BG-32) to AltriDatiGestionali blocks.
+		d.OtherData = append(d.OtherData, attributesToOtherData(line.Item.Attributes)...)
+
 		dl = append(dl, d)
 	}
 
 	return dl
+}
+
+// attributesToOtherData maps an item's attributes (EN 16931 BG-32) to FatturaPA
+// AltriDatiGestionali blocks. The attribute's type (or key as a fallback) becomes
+// the TipoDato (BT-160), and its value (BT-161) is placed in the reference field
+// that matches the GOBL value type: text and code values go to RiferimentoTesto,
+// amounts to RiferimentoNumero, and dates to RiferimentoData.
+func attributesToOtherData(attrs []*org.Attribute) []*OtherData {
+	var out []*OtherData
+	for _, a := range attrs {
+		if a == nil {
+			continue
+		}
+		name := a.Type.String()
+		if name == "" {
+			name = a.Key.String()
+		}
+		if name == "" {
+			// Without a TipoDato there is no valid AltriDatiGestionali to emit.
+			continue
+		}
+		od := &OtherData{DataType: name}
+		switch {
+		case a.Text != "":
+			od.TextReference = a.Text
+		case a.Code != "":
+			od.TextReference = a.Code.String()
+		case a.Amount != nil:
+			od.NumReference = formatAmount8(a.Amount)
+		case a.Date != nil:
+			od.DateReference = a.Date.String()
+		}
+		out = append(out, od)
+	}
+	return out
 }
 
 func exemptExtensionCode(ext tax.Extensions) string {
