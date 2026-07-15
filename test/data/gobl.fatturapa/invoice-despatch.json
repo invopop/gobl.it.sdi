@@ -4,7 +4,7 @@
 		"uuid": "679a2f25-7483-11ec-9722-7ea2cb436ff6",
 		"dig": {
 			"alg": "sha256",
-			"val": "c3e44541bb5eb8aca1afc2a9162f2e155c2e44d93539c5043fdcb76c9898983b"
+			"val": "2837c4f5ee910dd4e583548ba5ab67173ff09bcf4716037badb7e3e602c2463f"
 		}
 	},
 	"doc": {
@@ -82,6 +82,16 @@
 				"quantity": "1000",
 				"item": {
 					"name": "Mattoni Rossi",
+					"attributes": [
+						{
+							"type": "LOTTO",
+							"text": "MR-2025-08"
+						},
+						{
+							"type": "PRODUZIONE",
+							"date": "2025-08-01"
+						}
+					],
 					"price": "0.50"
 				},
 				"sum": "500.00",
@@ -100,6 +110,17 @@
 				"quantity": "50",
 				"item": {
 					"name": "Sacchi di Cemento 25kg",
+					"attributes": [
+						{
+							"type": "LOTTO",
+							"text": "CEM-2025-07"
+						},
+						{
+							"type": "PESO",
+							"amount": "25",
+							"unit": "kg"
+						}
+					],
 					"price": "6.00"
 				},
 				"sum": "300.00",
