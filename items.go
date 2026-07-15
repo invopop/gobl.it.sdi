@@ -143,8 +143,11 @@ func attributesToOtherData(attrs []*org.Attribute) []*OtherData {
 		if name == "" {
 			name = a.Key.String()
 		}
-		if name == "" {
-			// Without a TipoDato there is no valid AltriDatiGestionali to emit.
+		// The TipoDato is mandatory and limited to 10 characters (String10), and
+		// INVCONT is reserved as the reverse-charge marker (it would be re-parsed
+		// as such and the value lost), so skip anything that cannot be emitted as
+		// a valid, unambiguous AltriDatiGestionali block.
+		if name == "" || len(name) > 10 || name == tipoDatoINVCONT {
 			continue
 		}
 		od := &OtherData{DataType: name}
@@ -157,6 +160,9 @@ func attributesToOtherData(attrs []*org.Attribute) []*OtherData {
 			od.NumReference = formatAmount8(a.Amount)
 		case a.Date != nil:
 			od.DateReference = a.Date.String()
+		default:
+			// No BT-161 value to map; skip rather than emit a reference-less block.
+			continue
 		}
 		out = append(out, od)
 	}

@@ -124,6 +124,9 @@ func goblBillInvoiceAddLineDetails(inv *bill.Invoice, lineDetails []*LineDetail,
 		// Map AltriDatiGestionali blocks: the INVCONT marker sets the
 		// reverse-charge tag, everything else becomes an item attribute (BG-32).
 		for _, od := range detail.OtherData {
+			if od == nil {
+				continue
+			}
 			if od.DataType == tipoDatoINVCONT {
 				inv.SetTags(tax.TagReverseCharge)
 				continue

@@ -150,6 +150,26 @@ func TestAltriDatiGestionaliAttributes(t *testing.T) {
 		assert.Equal(t, "color", od[0].DataType)
 		assert.Equal(t, "red", od[0].TextReference)
 	})
+
+	t.Run("should skip valueless, oversized, and reserved attributes", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Lines[0].Item.Attributes = []*org.Attribute{
+				{Type: "OK", Text: "keep"},
+				{Type: "NOVALUE"},                       // no value -> skipped
+				{Type: "INVCONT", Text: "reserved"},     // reverse-charge marker -> skipped
+				{Type: "TOOLONGTIPO", Text: "over ten"}, // 11 chars > TipoDato limit -> skipped
+			}
+		})
+
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		od := doc.Body[0].GoodsServices.LineDetails[0].OtherData
+		require.Len(t, od, 1)
+		assert.Equal(t, "OK", od[0].DataType)
+		assert.Equal(t, "keep", od[0].TextReference)
+	})
 }
 
 func TestDatiRiepilogo(t *testing.T) {
