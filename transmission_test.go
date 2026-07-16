@@ -50,4 +50,16 @@ func TestTransmissionData(t *testing.T) {
 		assert.Equal(t, "0000000", dt.RecipientCode)
 		assert.Equal(t, "fooo@inbox.com", dt.RecipientPEC)
 	})
+
+	t.Run("should ignore the PEC when the customer also has a codice destinatario", func(t *testing.T) {
+
+		env := test.LoadTestFile("invoice-simple-with-code-and-pec.json", test.PathGOBLFatturaPA)
+		doc, err := test.ConvertFromGOBL(env, test.LoadOptions()...)
+		require.NoError(t, err)
+
+		dt := doc.Header.TransmissionData
+
+		assert.Equal(t, "ABC1234", dt.RecipientCode)
+		assert.Equal(t, "", dt.RecipientPEC)
+	})
 }
