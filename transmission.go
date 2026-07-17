@@ -77,6 +77,13 @@ func codiceDestinatario(cus *org.Party) string {
 func pecDestinatario(cus *org.Party) string {
 	if cus != nil {
 		for _, inbox := range cus.Inboxes {
+			// PECDestinatario is only allowed alongside the "0000000" code,
+			// so a codice destinatario inbox takes precedence over the PEC.
+			if inbox.Key == sdi.KeyInboxCode {
+				return ""
+			}
+		}
+		for _, inbox := range cus.Inboxes {
 			if inbox.Key == sdi.KeyInboxPEC {
 				if inbox.Email != "" {
 					return inbox.Email
