@@ -183,17 +183,6 @@ func goblBillInvoiceAddGeneralDocumentData(inv *bill.Invoice, doc *GeneralDocume
 		inv.Totals.Payable = payable
 	}
 
-	// Add totals rounding
-	if doc.Rounding != "" {
-		rounding, err := parseAmount(doc.Rounding)
-		if err != nil {
-			return fmt.Errorf("adding rounding: %w", err)
-		}
-		if inv.Totals == nil {
-			inv.Totals = new(bill.Totals)
-		}
-		inv.Totals.Rounding = &rounding
-	}
 	// Add stamp duty
 	goblBillInvoiceAddStampDuty(inv, doc.StampDuty)
 
@@ -428,7 +417,8 @@ func goblBillInvoiceAddPriceAdjustments(inv *bill.Invoice, adjustments []*PriceA
 			percentPtr = &percent
 		}
 
-		if adj.Type == scontoMaggiorazioneTypeDiscount {
+		switch adj.Type {
+		case scontoMaggiorazioneTypeDiscount:
 			if inv.Discounts == nil {
 				inv.Discounts = make([]*bill.Discount, 0)
 			}
@@ -436,7 +426,7 @@ func goblBillInvoiceAddPriceAdjustments(inv *bill.Invoice, adjustments []*PriceA
 				Amount:  amount,
 				Percent: percentPtr,
 			})
-		} else if adj.Type == scontoMaggiorazioneTypeCharge {
+		case scontoMaggiorazioneTypeCharge:
 			if inv.Charges == nil {
 				inv.Charges = make([]*bill.Charge, 0)
 			}

@@ -164,6 +164,7 @@ func TestBodyInConversion(t *testing.T) {
 		require.NotNil(t, inv.Totals)
 		require.NotNil(t, inv.Totals.Rounding)
 		require.Equal(t, inv.Totals.Rounding.String(), "0.01")
+		require.Equal(t, "1388.41", inv.Totals.Payable.String())
 
 	})
 
@@ -182,6 +183,7 @@ func TestBodyInConversion(t *testing.T) {
 		require.NotNil(t, inv.Totals)
 		require.NotNil(t, inv.Totals.Rounding)
 		require.Equal(t, inv.Totals.Rounding.String(), "0.01")
+		require.Equal(t, "1388.41", inv.Totals.Payable.String())
 
 	})
 }

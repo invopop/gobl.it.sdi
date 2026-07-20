@@ -4,7 +4,9 @@ import (
 	"testing"
 
 	"github.com/invopop/gobl.fatturapa/test"
+	"github.com/invopop/gobl/addons/it/sdi"
 	"github.com/invopop/gobl/bill"
+	"github.com/invopop/gobl/cbc"
 	"github.com/invopop/gobl/l10n"
 	"github.com/invopop/gobl/org"
 	"github.com/invopop/gobl/regimes/it"
@@ -47,6 +49,143 @@ func TestPartiesSupplier(t *testing.T) {
 		s := doc.Header.Supplier
 
 		assert.Equal(t, "RF01", s.Identity.FiscalRegime)
+	})
+
+	t.Run("should keep supplier info for EU company with Tax ID given", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Supplier.TaxID.Code = "81237984062783472"
+			inv.Supplier.TaxID.Country = l10n.AT.Tax()
+		})
+
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		s := doc.Header.Supplier
+
+		assert.Equal(t, "AT", s.Identity.TaxID.Country)
+		assert.Equal(t, "81237984062783472", s.Identity.TaxID.Code)
+	})
+
+	t.Run("should default supplier info for EU individual with no Tax ID given", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Supplier.TaxID.Code = ""
+			inv.Supplier.TaxID.Country = l10n.SE.Tax()
+		})
+
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		s := doc.Header.Supplier
+
+		assert.Equal(t, "SE", s.Identity.TaxID.Country)
+		assert.Equal(t, "0000000", s.Identity.TaxID.Code)
+	})
+
+	t.Run("should keep supplier Tax ID for Greek company (EL tax country code)", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Supplier.TaxID.Code = "925667500"
+			inv.Supplier.TaxID.Country = l10n.EL.Tax()
+		})
+
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		s := doc.Header.Supplier
+
+		assert.Equal(t, "EL", s.Identity.TaxID.Country)
+		assert.Equal(t, "925667500", s.Identity.TaxID.Code)
+	})
+
+	t.Run("should replace supplier ID info for non-EU company with Tax ID given", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Supplier.TaxID.Code = "09823876432"
+			inv.Supplier.TaxID.Country = l10n.GB.Tax()
+		})
+
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		s := doc.Header.Supplier
+
+		assert.Equal(t, "GB", s.Identity.TaxID.Country)
+		assert.Equal(t, "OO99999999999", s.Identity.TaxID.Code)
+	})
+
+	t.Run("should default supplier info for non-EU individual with no Tax ID given", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Supplier.TaxID.Code = ""
+			inv.Supplier.TaxID.Country = l10n.JP.Tax()
+		})
+
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		s := doc.Header.Supplier
+
+		assert.Equal(t, "JP", s.Identity.TaxID.Country)
+		assert.Equal(t, "0000000", s.Identity.TaxID.Code)
+	})
+
+	t.Run("should return an error if supplier has no Tax ID", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Supplier.TaxID = nil
+		})
+
+		_, err := test.ConvertFromGOBL(env)
+		require.ErrorContains(t, err, "supplier tax ID is required")
+	})
+
+	t.Run("should return an error for IT supplier with no Tax ID code", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Supplier.TaxID.Code = ""
+		})
+
+		_, err := test.ConvertFromGOBL(env)
+		require.ErrorContains(t, err, "supplier tax ID is required")
+	})
+
+	t.Run("should emit IscrizioneREA liquidation state and sole shareholder", func(t *testing.T) {
+		cases := []struct {
+			name            string
+			liquidation     string
+			soleShareholder string
+		}{
+			{"not in liquidation, multiple shareholders", "LN", "SM"},
+			{"not in liquidation, sole shareholder", "LN", "SU"},
+			{"in liquidation, multiple shareholders", "LS", "SM"},
+			{"in liquidation, sole shareholder", "LS", "SU"},
+		}
+		for _, c := range cases {
+			t.Run(c.name, func(t *testing.T) {
+				env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
+				test.ModifyInvoice(env, func(inv *bill.Invoice) {
+					inv.Supplier.Registration.Ext = inv.Supplier.Registration.Ext.
+						Set(sdi.ExtKeyLiquidationState, cbc.Code(c.liquidation)).
+						Set(sdi.ExtKeyShareholderState, cbc.Code(c.soleShareholder))
+				})
+				doc, err := test.ConvertFromGOBL(env)
+				require.NoError(t, err)
+
+				s := doc.Header.Supplier
+				assert.Equal(t, c.liquidation, s.Registration.LiquidationState)
+				assert.Equal(t, c.soleShareholder, s.Registration.SoleShareholder)
+			})
+		}
+	})
+
+	t.Run("should omit SocioUnico when sole shareholder unset", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		assert.Empty(t, doc.Header.Supplier.Registration.SoleShareholder)
 	})
 }
 

@@ -68,7 +68,10 @@ func Convert(env *gobl.Envelope, opts ...Option) (*Document, error) {
 
 	TransmissionData := newTransmissionData(invoice, env, config.Transmitter)
 
-	header := newHeader(invoice, TransmissionData)
+	header, err := newHeader(invoice, TransmissionData)
+	if err != nil {
+		return nil, err
+	}
 
 	body, err := newBody(invoice)
 	if err != nil {

@@ -1,30 +1,27 @@
-run:
-  timeout: "120s"
+version: "2"
 
 output:
   formats:
-    - format: "colored-line-number"
+    text:
+      path: stdout
 
 linters:
   enable:
-    - "gocyclo"
-    - "unconvert"
-    - "goimports"
-    - "govet"
-    #- "misspell" # doesn't handle multilanguage well
-    - "nakedret"
-    - "revive"
-    - "goconst"
-    - "unparam"
-    - "gofmt"
-    - "errname"
-    - "zerologlint"
+    - errname
+    - gocyclo
+    - nakedret
+    - revive
+    - unconvert
+    - unparam
+    - zerologlint
+  settings:
+    staticcheck:
+      checks:
+        - all
+        # Embedding is complex in GOBL, so this check is disabled.
+        - -QF1008
 
-linters-settings:
-  staticcheck:
-    # SAxxxx checks in https://staticcheck.io/docs/configuration/options/#checks
-    # Default: ["*"]
-    checks: ["all"]
-
-issues:
-  exclude-use-default: false
+formatters:
+  enable:
+    - gofmt
+    - goimports

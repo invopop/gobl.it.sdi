@@ -1,6 +1,8 @@
 package fatturapa
 
 import (
+	"errors"
+
 	"github.com/invopop/gobl/addons/it/sdi"
 	"github.com/invopop/gobl/l10n"
 	"github.com/invopop/gobl/org"
@@ -79,6 +81,9 @@ type Registration struct {
 	Entry string `xml:"NumeroREA,omitempty"`
 	// Company's share capital
 	Capital string `xml:"CapitaleSociale,omitempty"`
+	// Indication of whether the company has a sole shareholder.
+	// Possible values: SU (sole shareholder), SM (multiple shareholders).
+	SoleShareholder string `xml:"SocioUnico,omitempty"`
 	// Indication of whether the Company is in liquidation or not.
 	// Possible values: LS (in liquidation), LN (not in liquidation)
 	LiquidationState string `xml:"StatoLiquidazione,omitempty"`
@@ -90,17 +95,26 @@ type Contact struct {
 	Email     string `xml:"Email,omitempty"`
 }
 
-func newSupplier(s *org.Party) *Supplier {
+func newSupplier(s *org.Party) (*Supplier, error) {
 	ns := &Supplier{
 		Identity: &Identity{
-			TaxID: &TaxID{
-				Country: s.TaxID.Country.String(),
-				Code:    s.TaxID.Code.String(),
-			},
 			Profile: newProfile(s),
 		},
 		Registration: newRegistration(s),
 		Contact:      newContact(s),
+	}
+
+	if s.TaxID != nil {
+		ns.Identity.TaxID = partyTaxID(s.TaxID)
+	}
+	// Unlike the customer's, the supplier's IdFiscaleIVA is mandatory in the
+	// FatturaPA schema, so fail early instead of generating XML that SDI
+	// would reject.
+	if ns.Identity.TaxID == nil {
+		return nil, errors.New("supplier tax ID is required")
+	}
+	if id := org.IdentityForKey(s.Identities, it.IdentityKeyFiscalCode); id != nil {
+		ns.Identity.FiscalCode = id.Code.String()
 	}
 
 	if v := s.Ext.Get(sdi.ExtKeyFiscalRegime); v != "" {
@@ -113,7 +127,7 @@ func newSupplier(s *org.Party) *Supplier {
 		ns.Address = newAddress(s.Addresses[0])
 	}
 
-	return ns
+	return ns, nil
 }
 
 func newCustomer(c *org.Party) *Customer {
@@ -131,7 +145,7 @@ func newCustomer(c *org.Party) *Customer {
 	}
 
 	if c.TaxID != nil {
-		da.TaxID = customerTaxID(c.TaxID)
+		da.TaxID = partyTaxID(c.TaxID)
 	}
 	if id := org.IdentityForKey(c.Identities, it.IdentityKeyFiscalCode); id != nil {
 		da.FiscalCode = id.Code.String()
@@ -175,7 +189,13 @@ func newContact(party *org.Party) *Contact {
 	return c
 }
 
-func customerTaxID(id *tax.Identity) *TaxID {
+// partyTaxID builds the FatturaPA tax ID for a party (supplier or customer),
+// applying the SDI defaults for foreign parties: a non-IT party with no VAT
+// number is treated as a private individual (0000000), and a non-EU party with
+// a VAT number uses the generic non-EU placeholder (OO99999999999). An IT party
+// with no code returns nil: an IT customer may identify itself with the
+// CodiceFiscale instead, while an IT supplier must always provide a VAT number.
+func partyTaxID(id *tax.Identity) *TaxID {
 	code := id.Code.String()
 
 	if code == "" {
@@ -211,10 +231,16 @@ func newRegistration(supplier *org.Party) *Registration {
 		capitalFormatted = capital.Rescale(2).String()
 	}
 
+	liquidationState := supplier.Registration.Ext.Get(sdi.ExtKeyLiquidationState).String()
+	if liquidationState == "" {
+		liquidationState = statoLiquidazioneDefault
+	}
+
 	return &Registration{
 		Office:           supplier.Registration.Office,
 		Entry:            supplier.Registration.Entry,
 		Capital:          capitalFormatted,
-		LiquidationState: statoLiquidazioneDefault,
+		SoleShareholder:  supplier.Registration.Ext.Get(sdi.ExtKeyShareholderState).String(),
+		LiquidationState: liquidationState,
 	}
 }

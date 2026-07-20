@@ -9,10 +9,14 @@ type Header struct {
 	Customer         *Customer         `xml:"CessionarioCommittente,omitempty"`
 }
 
-func newHeader(inv *bill.Invoice, TransmissionData *TransmissionData) *Header {
+func newHeader(inv *bill.Invoice, TransmissionData *TransmissionData) (*Header, error) {
+	supplier, err := newSupplier(inv.Supplier)
+	if err != nil {
+		return nil, err
+	}
 	return &Header{
 		TransmissionData: TransmissionData,
-		Supplier:         newSupplier(inv.Supplier),
+		Supplier:         supplier,
 		Customer:         newCustomer(inv.Customer),
-	}
+	}, nil
 }
