@@ -140,8 +140,6 @@ func attributesToOtherData(attrs []*org.Attribute) []*OtherData {
 		if a == nil {
 			continue
 		}
-		// Prefer the attribute's type as the TipoDato (BT-160), falling back to
-		// its key when the type isn't a value FatturaPA can carry.
 		name := validTipoDato(a.Type.String())
 		if name == "" {
 			name = validTipoDato(a.Key.String())
@@ -168,10 +166,9 @@ func attributesToOtherData(attrs []*org.Attribute) []*OtherData {
 	return out
 }
 
-// validTipoDato returns name if it can be emitted as a FatturaPA TipoDato and an
-// empty string otherwise. TipoDato is a String10Type in the XSD (1-10 Basic Latin
-// characters), and INVCONT is reserved as the reverse-charge marker (a generic
-// attribute using it would be re-parsed as reverse charge and its value lost).
+// validTipoDato returns name if it is a valid FatturaPA TipoDato, else "".
+// TipoDato is a String10Type (1-10 Basic Latin characters); INVCONT is excluded
+// as it is reserved for the reverse-charge marker.
 func validTipoDato(name string) string {
 	if name == "" || len(name) > 10 || name == tipoDatoINVCONT {
 		return ""

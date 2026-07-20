@@ -161,8 +161,7 @@ func otherDataToAttribute(od *OtherData) *org.Attribute {
 	if od == nil {
 		return nil
 	}
-	// Trim whitespace so a pretty-printed TipoDato doesn't yield an attribute
-	// type that later fails to round-trip through the String10 validation.
+	// Trim whitespace so a pretty-printed TipoDato still round-trips cleanly.
 	dataType := strings.TrimSpace(od.DataType)
 	if dataType == "" {
 		return nil
