@@ -127,7 +127,7 @@ func goblBillInvoiceAddLineDetails(inv *bill.Invoice, lineDetails []*LineDetail,
 			if od == nil {
 				continue
 			}
-			if od.DataType == tipoDatoINVCONT {
+			if strings.TrimSpace(od.DataType) == tipoDatoINVCONT {
 				inv.SetTags(tax.TagReverseCharge)
 				continue
 			}
@@ -158,10 +158,16 @@ func goblBillInvoiceAddLineDetails(inv *bill.Invoice, lineDetails []*LineDetail,
 // type, and the populated reference field (BT-161) becomes the matching value:
 // RiferimentoTesto to text, RiferimentoNumero to amount, RiferimentoData to date.
 func otherDataToAttribute(od *OtherData) *org.Attribute {
-	if od == nil || od.DataType == "" {
+	if od == nil {
 		return nil
 	}
-	a := &org.Attribute{Type: cbc.Code(od.DataType)}
+	// Trim whitespace so a pretty-printed TipoDato doesn't yield an attribute
+	// type that later fails to round-trip through the String10 validation.
+	dataType := strings.TrimSpace(od.DataType)
+	if dataType == "" {
+		return nil
+	}
+	a := &org.Attribute{Type: cbc.Code(dataType)}
 	switch {
 	case od.TextReference != "":
 		a.Text = od.TextReference

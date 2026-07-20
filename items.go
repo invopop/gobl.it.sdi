@@ -2,6 +2,7 @@ package fatturapa
 
 import (
 	"strconv"
+	"unicode"
 
 	"github.com/invopop/gobl/addons/it/sdi"
 	"github.com/invopop/gobl/bill"
@@ -139,15 +140,13 @@ func attributesToOtherData(attrs []*org.Attribute) []*OtherData {
 		if a == nil {
 			continue
 		}
-		name := a.Type.String()
+		// Prefer the attribute's type as the TipoDato (BT-160), falling back to
+		// its key when the type isn't a value FatturaPA can carry.
+		name := validTipoDato(a.Type.String())
 		if name == "" {
-			name = a.Key.String()
+			name = validTipoDato(a.Key.String())
 		}
-		// The TipoDato is mandatory and limited to 10 characters (String10), and
-		// INVCONT is reserved as the reverse-charge marker (it would be re-parsed
-		// as such and the value lost), so skip anything that cannot be emitted as
-		// a valid, unambiguous AltriDatiGestionali block.
-		if name == "" || len(name) > 10 || name == tipoDatoINVCONT {
+		if name == "" {
 			continue
 		}
 		od := &OtherData{DataType: name}
@@ -167,6 +166,22 @@ func attributesToOtherData(attrs []*org.Attribute) []*OtherData {
 		out = append(out, od)
 	}
 	return out
+}
+
+// validTipoDato returns name if it can be emitted as a FatturaPA TipoDato and an
+// empty string otherwise. TipoDato is a String10Type in the XSD (1-10 Basic Latin
+// characters), and INVCONT is reserved as the reverse-charge marker (a generic
+// attribute using it would be re-parsed as reverse charge and its value lost).
+func validTipoDato(name string) string {
+	if name == "" || len(name) > 10 || name == tipoDatoINVCONT {
+		return ""
+	}
+	for _, r := range name {
+		if r > unicode.MaxASCII {
+			return ""
+		}
+	}
+	return name
 }
 
 func exemptExtensionCode(ext tax.Extensions) string {
