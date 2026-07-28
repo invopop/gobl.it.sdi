@@ -120,7 +120,7 @@ func generateLineDetails(inv *bill.Invoice) []*LineDetail {
 			}
 		}
 
-		// Map item attributes (BG-32) to AltriDatiGestionali blocks.
+		// Map item attributes to AltriDatiGestionali blocks.
 		d.OtherData = append(d.OtherData, attributesToOtherData(line.Item.Attributes)...)
 
 		dl = append(dl, d)
@@ -129,10 +129,9 @@ func generateLineDetails(inv *bill.Invoice) []*LineDetail {
 	return dl
 }
 
-// attributesToOtherData maps an item's attributes (EN 16931 BG-32) to FatturaPA
-// AltriDatiGestionali blocks. The attribute's type (or key as a fallback) becomes
-// the TipoDato (BT-160), and its value (BT-161) is placed in the reference field
-// that matches the GOBL value type: text and code values go to RiferimentoTesto,
+// attributesToOtherData maps an item's attributes to AltriDatiGestionali blocks.
+// The attribute's type (or key as a fallback) becomes the TipoDato, and its value
+// goes to the reference field that matches: text and code to RiferimentoTesto,
 // amounts to RiferimentoNumero, and dates to RiferimentoData.
 func attributesToOtherData(attrs []*org.Attribute) []*OtherData {
 	var out []*OtherData
@@ -158,7 +157,7 @@ func attributesToOtherData(attrs []*org.Attribute) []*OtherData {
 		case a.Date != nil:
 			od.DateReference = a.Date.String()
 		default:
-			// No BT-161 value to map; skip rather than emit a reference-less block.
+			// No value to map, so skip instead of emitting an empty block.
 			continue
 		}
 		out = append(out, od)
@@ -166,9 +165,9 @@ func attributesToOtherData(attrs []*org.Attribute) []*OtherData {
 	return out
 }
 
-// validTipoDato returns name if it is a valid FatturaPA TipoDato, else "".
-// TipoDato is a String10Type (1-10 Basic Latin characters); INVCONT is excluded
-// as it is reserved for the reverse-charge marker.
+// validTipoDato returns name if it can be used as a TipoDato, else "". FatturaPA
+// allows up to ten plain ASCII characters, and INVCONT is reserved for the
+// reverse-charge marker.
 func validTipoDato(name string) string {
 	if name == "" || len(name) > 10 || name == tipoDatoINVCONT {
 		return ""

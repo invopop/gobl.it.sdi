@@ -31,6 +31,59 @@ func TestOtherDataToAttribute(t *testing.T) {
 		assert.Equal(t, "not-a-number", a.Text)
 	})
 
+	t.Run("prefers the date over the number and the text", func(t *testing.T) {
+		a := otherDataToAttribute(&OtherData{
+			DataType:      "SCADENZA",
+			TextReference: "ABC-123",
+			NumReference:  "12.50",
+			DateReference: "2024-03-15",
+		})
+		require.NotNil(t, a)
+		require.NotNil(t, a.Date)
+		assert.Equal(t, "2024-03-15", a.Date.String())
+		assert.Nil(t, a.Amount)
+		assert.Empty(t, a.Text)
+	})
+
+	t.Run("prefers the number over the text", func(t *testing.T) {
+		a := otherDataToAttribute(&OtherData{
+			DataType:      "PESO",
+			TextReference: "ABC-123",
+			NumReference:  "12.50",
+		})
+		require.NotNil(t, a)
+		require.NotNil(t, a.Amount)
+		assert.Equal(t, "12.50", a.Amount.String())
+		assert.Empty(t, a.Text)
+	})
+
+	t.Run("falls back to the next reference when the preferred one is invalid", func(t *testing.T) {
+		a := otherDataToAttribute(&OtherData{
+			DataType:      "SCADENZA",
+			TextReference: "ABC-123",
+			NumReference:  "12.50",
+			DateReference: "31/12/2024",
+		})
+		require.NotNil(t, a)
+		assert.Nil(t, a.Date)
+		require.NotNil(t, a.Amount)
+		assert.Equal(t, "12.50", a.Amount.String())
+		assert.Empty(t, a.Text)
+	})
+
+	t.Run("falls back to the text when the number is also invalid", func(t *testing.T) {
+		a := otherDataToAttribute(&OtherData{
+			DataType:      "SCADENZA",
+			TextReference: "ABC-123",
+			NumReference:  "not-a-number",
+			DateReference: "31/12/2024",
+		})
+		require.NotNil(t, a)
+		assert.Nil(t, a.Date)
+		assert.Nil(t, a.Amount)
+		assert.Equal(t, "ABC-123", a.Text)
+	})
+
 	t.Run("maps a date reference to a date", func(t *testing.T) {
 		a := otherDataToAttribute(&OtherData{DataType: "SCADENZA", DateReference: "2024-03-15"})
 		require.NotNil(t, a)
@@ -54,6 +107,26 @@ func TestOtherDataToAttribute(t *testing.T) {
 
 	t.Run("returns nil when there is no reference value", func(t *testing.T) {
 		assert.Nil(t, otherDataToAttribute(&OtherData{DataType: "LOTTO"}))
+	})
+
+	t.Run("returns nil when the references are only whitespace", func(t *testing.T) {
+		assert.Nil(t, otherDataToAttribute(&OtherData{
+			DataType:      "LOTTO",
+			TextReference: "   ",
+			NumReference:  " ",
+			DateReference: "\n\t",
+		}))
+	})
+
+	t.Run("trims whitespace around the reference values", func(t *testing.T) {
+		a := otherDataToAttribute(&OtherData{DataType: "LOTTO", TextReference: "  ABC-123  "})
+		require.NotNil(t, a)
+		assert.Equal(t, "ABC-123", a.Text)
+
+		a = otherDataToAttribute(&OtherData{DataType: "SCADENZA", DateReference: "  2024-03-15  "})
+		require.NotNil(t, a)
+		require.NotNil(t, a.Date)
+		assert.Equal(t, "2024-03-15", a.Date.String())
 	})
 
 	t.Run("returns nil for a blank or nil block", func(t *testing.T) {

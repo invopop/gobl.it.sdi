@@ -225,8 +225,8 @@ func TestINVCONTInConversion(t *testing.T) {
 
 func TestAltriDatiGestionaliAttributesInConversion(t *testing.T) {
 	t.Run("should round-trip item attributes through AltriDatiGestionali", func(t *testing.T) {
-		// Build a GOBL invoice with attributes of each value type, convert it to
-		// FatturaPA, then parse it back and confirm the attributes survive.
+		// Convert an invoice with an attribute of each value type to FatturaPA,
+		// then parse it back and check the attributes survive.
 		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
 		date := cal.MakeDate(2024, 3, 15)
 		amount := num.MakeAmount(1250, 2)

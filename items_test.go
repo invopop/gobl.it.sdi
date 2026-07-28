@@ -124,7 +124,7 @@ func TestAltriDatiGestionaliAttributes(t *testing.T) {
 		assert.Equal(t, "COLORE", od[1].DataType)
 		assert.Equal(t, "RAL5010", od[1].TextReference)
 
-		// Amount -> RiferimentoNumero (unit is dropped: FatturaPA has no field for it)
+		// Amount -> RiferimentoNumero. The unit is dropped, there is no field for it.
 		assert.Equal(t, "PESO", od[2].DataType)
 		assert.Equal(t, "12.50", od[2].NumReference)
 		assert.Empty(t, od[2].TextReference)
@@ -156,9 +156,9 @@ func TestAltriDatiGestionaliAttributes(t *testing.T) {
 		test.ModifyInvoice(env, func(inv *bill.Invoice) {
 			inv.Lines[0].Item.Attributes = []*org.Attribute{
 				{Type: "OK", Text: "keep"},
-				{Type: "NOVALUE"},                       // no value -> skipped
-				{Type: "INVCONT", Text: "reserved"},     // reverse-charge marker -> skipped
-				{Type: "TOOLONGTIPO", Text: "over ten"}, // 11 chars > TipoDato limit -> skipped
+				{Type: "NOVALUE"},                       // no value
+				{Type: "INVCONT", Text: "reserved"},     // reverse-charge marker
+				{Type: "TOOLONGTIPO", Text: "over ten"}, // over ten characters
 			}
 		})
 

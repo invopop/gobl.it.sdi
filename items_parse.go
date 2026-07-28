@@ -122,7 +122,7 @@ func goblBillInvoiceAddLineDetails(inv *bill.Invoice, lineDetails []*LineDetail,
 		}
 
 		// Map AltriDatiGestionali blocks: the INVCONT marker sets the
-		// reverse-charge tag, everything else becomes an item attribute (BG-32).
+		// reverse-charge tag, everything else becomes an item attribute.
 		for _, od := range detail.OtherData {
 			if od == nil {
 				continue
@@ -153,40 +153,48 @@ func goblBillInvoiceAddLineDetails(inv *bill.Invoice, lineDetails []*LineDetail,
 	return nil
 }
 
-// otherDataToAttribute converts a FatturaPA AltriDatiGestionali block into a GOBL
-// item attribute (EN 16931 BG-32). The TipoDato (BT-160) becomes the attribute
-// type, and the populated reference field (BT-161) becomes the matching value:
-// RiferimentoTesto to text, RiferimentoNumero to amount, RiferimentoData to date.
+// otherDataToAttribute converts an AltriDatiGestionali block into a GOBL item
+// attribute. TipoDato becomes the attribute type, and one of the reference
+// fields becomes the value. A block may carry more than one reference, but an
+// attribute holds a single value, so date wins over number, which wins over text.
 func otherDataToAttribute(od *OtherData) *org.Attribute {
 	if od == nil {
 		return nil
 	}
-	// Trim whitespace so a pretty-printed TipoDato still round-trips cleanly.
+	// Everything is trimmed, as the schema allows whitespace-only values that
+	// would otherwise become empty attributes.
 	dataType := strings.TrimSpace(od.DataType)
 	if dataType == "" {
 		return nil
 	}
+	text := strings.TrimSpace(od.TextReference)
+	number := strings.TrimSpace(od.NumReference)
+	dateRef := strings.TrimSpace(od.DateReference)
+
 	a := &org.Attribute{Type: cbc.Code(dataType)}
-	switch {
-	case od.TextReference != "":
-		a.Text = od.TextReference
-	case od.NumReference != "":
-		amount, err := parseAmount(od.NumReference)
-		if err != nil {
-			// Preserve the raw value rather than dropping the attribute.
-			a.Text = od.NumReference
-		} else {
-			a.Amount = &amount
-		}
-	case od.DateReference != "":
-		date, err := parseDate(od.DateReference)
-		if err != nil {
-			a.Text = od.DateReference
-		} else {
+	if dateRef != "" {
+		if date, err := parseDate(dateRef); err == nil {
 			a.Date = &date
+			return a
 		}
+	}
+	if number != "" {
+		if amount, err := parseAmount(number); err == nil {
+			a.Amount = &amount
+			return a
+		}
+	}
+	if text != "" {
+		a.Text = text
+		return a
+	}
+	// Nothing parsed cleanly, so keep the raw value instead of dropping it.
+	switch {
+	case dateRef != "":
+		a.Text = dateRef
+	case number != "":
+		a.Text = number
 	default:
-		// TipoDato with no reference value has nothing to map to a GOBL value.
 		return nil
 	}
 	return a
