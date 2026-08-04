@@ -121,11 +121,18 @@ func goblBillInvoiceAddLineDetails(inv *bill.Invoice, lineDetails []*LineDetail,
 			line.Taxes = append(line.Taxes, vatCombo)
 		}
 
-		// Check for INVCONT in AltriDatiGestionali
+		// Map AltriDatiGestionali blocks: the INVCONT marker sets the
+		// reverse-charge tag, everything else becomes an item attribute.
 		for _, od := range detail.OtherData {
-			if od.DataType == tipoDatoINVCONT {
+			if od == nil {
+				continue
+			}
+			if strings.TrimSpace(od.DataType) == tipoDatoINVCONT {
 				inv.SetTags(tax.TagReverseCharge)
-				break
+				continue
+			}
+			if attr := otherDataToAttribute(od); attr != nil {
+				line.Item.Attributes = append(line.Item.Attributes, attr)
 			}
 		}
 
@@ -144,6 +151,53 @@ func goblBillInvoiceAddLineDetails(inv *bill.Invoice, lineDetails []*LineDetail,
 	}
 
 	return nil
+}
+
+// otherDataToAttribute converts an AltriDatiGestionali block into a GOBL item
+// attribute. TipoDato becomes the attribute type, and one of the reference
+// fields becomes the value. A block may carry more than one reference, but an
+// attribute holds a single value, so date wins over number, which wins over text.
+func otherDataToAttribute(od *OtherData) *org.Attribute {
+	if od == nil {
+		return nil
+	}
+	// Everything is trimmed, as the schema allows whitespace-only values that
+	// would otherwise become empty attributes.
+	dataType := strings.TrimSpace(od.DataType)
+	if dataType == "" {
+		return nil
+	}
+	text := strings.TrimSpace(od.TextReference)
+	number := strings.TrimSpace(od.NumReference)
+	dateRef := strings.TrimSpace(od.DateReference)
+
+	a := &org.Attribute{Type: cbc.Code(dataType)}
+	if dateRef != "" {
+		if date, err := parseDate(dateRef); err == nil {
+			a.Date = &date
+			return a
+		}
+	}
+	if number != "" {
+		if amount, err := parseAmount(number); err == nil {
+			a.Amount = &amount
+			return a
+		}
+	}
+	if text != "" {
+		a.Text = text
+		return a
+	}
+	// Nothing parsed cleanly, so keep the raw value instead of dropping it.
+	switch {
+	case dateRef != "":
+		a.Text = dateRef
+	case number != "":
+		a.Text = number
+	default:
+		return nil
+	}
+	return a
 }
 
 // goblBillLinesAddTaxSummary matches tax summary liability information with line items

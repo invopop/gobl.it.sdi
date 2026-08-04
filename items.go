@@ -2,10 +2,12 @@ package fatturapa
 
 import (
 	"strconv"
+	"unicode"
 
 	"github.com/invopop/gobl/addons/it/sdi"
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/i18n"
+	"github.com/invopop/gobl/org"
 	"github.com/invopop/gobl/tax"
 )
 
@@ -118,10 +120,64 @@ func generateLineDetails(inv *bill.Invoice) []*LineDetail {
 			}
 		}
 
+		// Map item attributes to AltriDatiGestionali blocks.
+		d.OtherData = append(d.OtherData, attributesToOtherData(line.Item.Attributes)...)
+
 		dl = append(dl, d)
 	}
 
 	return dl
+}
+
+// attributesToOtherData maps an item's attributes to AltriDatiGestionali blocks.
+// The attribute's type (or key as a fallback) becomes the TipoDato, and its value
+// goes to the reference field that matches: text and code to RiferimentoTesto,
+// amounts to RiferimentoNumero, and dates to RiferimentoData.
+func attributesToOtherData(attrs []*org.Attribute) []*OtherData {
+	var out []*OtherData
+	for _, a := range attrs {
+		if a == nil {
+			continue
+		}
+		name := validTipoDato(a.Type.String())
+		if name == "" {
+			name = validTipoDato(a.Key.String())
+		}
+		if name == "" {
+			continue
+		}
+		od := &OtherData{DataType: name}
+		switch {
+		case a.Text != "":
+			od.TextReference = a.Text
+		case a.Code != "":
+			od.TextReference = a.Code.String()
+		case a.Amount != nil:
+			od.NumReference = formatAmount8(a.Amount)
+		case a.Date != nil:
+			od.DateReference = a.Date.String()
+		default:
+			// No value to map, so skip instead of emitting an empty block.
+			continue
+		}
+		out = append(out, od)
+	}
+	return out
+}
+
+// validTipoDato returns name if it can be used as a TipoDato, else "". FatturaPA
+// allows up to ten plain ASCII characters, and INVCONT is reserved for the
+// reverse-charge marker.
+func validTipoDato(name string) string {
+	if name == "" || len(name) > 10 || name == tipoDatoINVCONT {
+		return ""
+	}
+	for _, r := range name {
+		if r > unicode.MaxASCII {
+			return ""
+		}
+	}
+	return name
 }
 
 func exemptExtensionCode(ext tax.Extensions) string {

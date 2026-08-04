@@ -1,6 +1,7 @@
 package fatturapa_test
 
 import (
+	"encoding/xml"
 	"os"
 	"path/filepath"
 	"testing"
@@ -8,8 +9,10 @@ import (
 	"github.com/invopop/gobl.fatturapa/test"
 	"github.com/invopop/gobl/addons/it/sdi"
 	"github.com/invopop/gobl/bill"
+	"github.com/invopop/gobl/cal"
 	"github.com/invopop/gobl/cbc"
 	"github.com/invopop/gobl/num"
+	"github.com/invopop/gobl/org"
 	"github.com/invopop/gobl/tax"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -217,5 +220,49 @@ func TestINVCONTInConversion(t *testing.T) {
 		invoice, ok := env.Extract().(*bill.Invoice)
 		require.True(t, ok)
 		assert.True(t, invoice.HasTags(tax.TagReverseCharge))
+	})
+}
+
+func TestAltriDatiGestionaliAttributesInConversion(t *testing.T) {
+	t.Run("should round-trip item attributes through AltriDatiGestionali", func(t *testing.T) {
+		// Convert an invoice with an attribute of each value type to FatturaPA,
+		// then parse it back and check the attributes survive.
+		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
+		date := cal.MakeDate(2024, 3, 15)
+		amount := num.MakeAmount(1250, 2)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Lines[0].Item.Attributes = []*org.Attribute{
+				{Type: "LOTTO", Text: "ABC-123"},
+				{Type: "PESO", Amount: &amount},
+				{Type: "SCADENZA", Date: &date},
+			}
+		})
+
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+		data, err := xml.MarshalIndent(doc, "", "\t")
+		require.NoError(t, err)
+
+		out, err := test.ConvertToGOBL(data)
+		require.NoError(t, err)
+		invoice, ok := out.Extract().(*bill.Invoice)
+		require.True(t, ok)
+
+		attrs := invoice.Lines[0].Item.Attributes
+		require.Len(t, attrs, 3)
+
+		// RiferimentoTesto -> Text
+		assert.Equal(t, cbc.Code("LOTTO"), attrs[0].Type)
+		assert.Equal(t, "ABC-123", attrs[0].Text)
+
+		// RiferimentoNumero -> Amount
+		assert.Equal(t, cbc.Code("PESO"), attrs[1].Type)
+		require.NotNil(t, attrs[1].Amount)
+		assert.Equal(t, "12.50", attrs[1].Amount.String())
+
+		// RiferimentoData -> Date
+		assert.Equal(t, cbc.Code("SCADENZA"), attrs[2].Type)
+		require.NotNil(t, attrs[2].Date)
+		assert.Equal(t, "2024-03-15", attrs[2].Date.String())
 	})
 }

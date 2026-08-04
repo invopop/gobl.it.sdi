@@ -3,7 +3,7 @@ module github.com/invopop/gobl.fatturapa
 go 1.25.0
 
 require (
-	github.com/invopop/gobl v0.501.0
+	github.com/invopop/gobl v0.503.0
 	github.com/invopop/xmlctx v0.13.0
 	github.com/invopop/xmldsig v0.10.0
 	github.com/lestrrat-go/libxml2 v0.0.0-20240905100032-c934e3fcb9d3

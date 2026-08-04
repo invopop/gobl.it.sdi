@@ -7,6 +7,7 @@ import (
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/cal"
 	"github.com/invopop/gobl/num"
+	"github.com/invopop/gobl/org"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -92,6 +93,82 @@ func TestAltriDatiGestionaliINVCONT(t *testing.T) {
 		dl := doc.Body[0].GoodsServices.LineDetails[0]
 		assert.Equal(t, "N2.1", dl.TaxNature)
 		assert.Empty(t, dl.OtherData)
+	})
+}
+
+func TestAltriDatiGestionaliAttributes(t *testing.T) {
+	t.Run("should map item attributes by value type", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
+		date := cal.MakeDate(2024, 3, 15)
+		amount := num.MakeAmount(1250, 2)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Lines[0].Item.Attributes = []*org.Attribute{
+				{Type: "LOTTO", Text: "ABC-123"},
+				{Type: "COLORE", Code: "RAL5010"},
+				{Type: "PESO", Amount: &amount, Unit: org.UnitKilogram},
+				{Type: "SCADENZA", Date: &date},
+			}
+		})
+
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		od := doc.Body[0].GoodsServices.LineDetails[0].OtherData
+		require.Len(t, od, 4)
+
+		// Text -> RiferimentoTesto
+		assert.Equal(t, "LOTTO", od[0].DataType)
+		assert.Equal(t, "ABC-123", od[0].TextReference)
+
+		// Code -> RiferimentoTesto
+		assert.Equal(t, "COLORE", od[1].DataType)
+		assert.Equal(t, "RAL5010", od[1].TextReference)
+
+		// Amount -> RiferimentoNumero. The unit is dropped, there is no field for it.
+		assert.Equal(t, "PESO", od[2].DataType)
+		assert.Equal(t, "12.50", od[2].NumReference)
+		assert.Empty(t, od[2].TextReference)
+
+		// Date -> RiferimentoData
+		assert.Equal(t, "SCADENZA", od[3].DataType)
+		assert.Equal(t, "2024-03-15", od[3].DateReference)
+	})
+
+	t.Run("should fall back to the attribute key when no type is set", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Lines[0].Item.Attributes = []*org.Attribute{
+				{Key: org.AttributeKeyColor, Text: "red"},
+			}
+		})
+
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		od := doc.Body[0].GoodsServices.LineDetails[0].OtherData
+		require.Len(t, od, 1)
+		assert.Equal(t, "color", od[0].DataType)
+		assert.Equal(t, "red", od[0].TextReference)
+	})
+
+	t.Run("should skip valueless, oversized, and reserved attributes", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Lines[0].Item.Attributes = []*org.Attribute{
+				{Type: "OK", Text: "keep"},
+				{Type: "NOVALUE"},                       // no value
+				{Type: "INVCONT", Text: "reserved"},     // reverse-charge marker
+				{Type: "TOOLONGTIPO", Text: "over ten"}, // over ten characters
+			}
+		})
+
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		od := doc.Body[0].GoodsServices.LineDetails[0].OtherData
+		require.Len(t, od, 1)
+		assert.Equal(t, "OK", od[0].DataType)
+		assert.Equal(t, "keep", od[0].TextReference)
 	})
 }
 
