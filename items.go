@@ -130,9 +130,11 @@ func generateLineDetails(inv *bill.Invoice) []*LineDetail {
 }
 
 // attributesToOtherData maps an item's attributes to AltriDatiGestionali blocks.
-// The attribute's type (or key as a fallback) becomes the TipoDato, and its value
-// goes to the reference field that matches: text and code to RiferimentoTesto,
-// amounts to RiferimentoNumero, and dates to RiferimentoData.
+// The attribute's type (or key as a fallback) becomes the TipoDato, and each
+// value fills the reference field that matches: text and code to
+// RiferimentoTesto, amounts to RiferimentoNumero, and dates to RiferimentoData.
+// A block may carry several references at once, so an attribute holding more
+// than one value still maps to a single block.
 func attributesToOtherData(attrs []*org.Attribute) []*OtherData {
 	var out []*OtherData
 	for _, a := range attrs {
@@ -147,16 +149,20 @@ func attributesToOtherData(attrs []*org.Attribute) []*OtherData {
 			continue
 		}
 		od := &OtherData{DataType: name}
+		// Text and code share RiferimentoTesto, so only one of them fits.
 		switch {
 		case a.Text != "":
 			od.TextReference = a.Text
 		case a.Code != "":
 			od.TextReference = a.Code.String()
-		case a.Amount != nil:
+		}
+		if a.Amount != nil {
 			od.NumReference = formatAmount8(a.Amount)
-		case a.Date != nil:
+		}
+		if a.Date != nil {
 			od.DateReference = a.Date.String()
-		default:
+		}
+		if od.TextReference == "" && od.NumReference == "" && od.DateReference == "" {
 			// No value to map, so skip instead of emitting an empty block.
 			continue
 		}

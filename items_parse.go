@@ -154,9 +154,9 @@ func goblBillInvoiceAddLineDetails(inv *bill.Invoice, lineDetails []*LineDetail,
 }
 
 // otherDataToAttribute converts an AltriDatiGestionali block into a GOBL item
-// attribute. TipoDato becomes the attribute type, and one of the reference
-// fields becomes the value. A block may carry more than one reference, but an
-// attribute holds a single value, so date wins over number, which wins over text.
+// attribute. TipoDato becomes the attribute type, and each reference field
+// becomes the value that matches it. A block may carry several references at
+// once, and they all end up in the same attribute.
 func otherDataToAttribute(od *OtherData) *org.Attribute {
 	if od == nil {
 		return nil
@@ -167,34 +167,30 @@ func otherDataToAttribute(od *OtherData) *org.Attribute {
 	if dataType == "" {
 		return nil
 	}
-	text := strings.TrimSpace(od.TextReference)
 	number := strings.TrimSpace(od.NumReference)
 	dateRef := strings.TrimSpace(od.DateReference)
 
-	a := &org.Attribute{Type: cbc.Code(dataType)}
-	if dateRef != "" {
-		if date, err := parseDate(dateRef); err == nil {
-			a.Date = &date
-			return a
-		}
+	a := &org.Attribute{
+		Type: cbc.Code(dataType),
+		Text: strings.TrimSpace(od.TextReference),
 	}
+	// A reference that doesn't parse is kept as text rather than dropped, but
+	// only while the text is still free.
 	if number != "" {
 		if amount, err := parseAmount(number); err == nil {
 			a.Amount = &amount
-			return a
+		} else if a.Text == "" {
+			a.Text = number
 		}
 	}
-	if text != "" {
-		a.Text = text
-		return a
+	if dateRef != "" {
+		if date, err := parseDate(dateRef); err == nil {
+			a.Date = &date
+		} else if a.Text == "" {
+			a.Text = dateRef
+		}
 	}
-	// Nothing parsed cleanly, so keep the raw value instead of dropping it.
-	switch {
-	case dateRef != "":
-		a.Text = dateRef
-	case number != "":
-		a.Text = number
-	default:
+	if a.Text == "" && a.Amount == nil && a.Date == nil {
 		return nil
 	}
 	return a
