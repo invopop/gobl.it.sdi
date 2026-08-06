@@ -4,7 +4,7 @@
 		"uuid": "679a2f25-7483-11ec-9722-7ea2cb436ff6",
 		"dig": {
 			"alg": "sha256",
-			"val": "2837c4f5ee910dd4e583548ba5ab67173ff09bcf4716037badb7e3e602c2463f"
+			"val": "69753172e2d48a904682d139f4536fa8128ad532268cec822d28d435ca00279f"
 		}
 	},
 	"doc": {
@@ -113,7 +113,8 @@
 					"attributes": [
 						{
 							"type": "LOTTO",
-							"text": "CEM-2025-07"
+							"text": "CEM-2025-07",
+							"date": "2027-07-01"
 						},
 						{
 							"type": "PESO",
