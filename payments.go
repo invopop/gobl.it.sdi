@@ -78,8 +78,8 @@ func prepareAdvancePaymentDetails(inv *bill.Invoice) []*PaymentDetailRow {
 			row.Date = advance.Date.String()
 		}
 		if advance.CreditTransfer != nil {
-			row.IBAN = advance.CreditTransfer.IBAN
-			row.BIC = advance.CreditTransfer.BIC
+			row.IBAN = advance.CreditTransfer.IBAN.String()
+			row.BIC = advance.CreditTransfer.BIC.String()
 		}
 		dp = append(dp, row)
 	}
@@ -96,8 +96,8 @@ func preparePaymentDetails(inv *bill.Invoice) []*PaymentDetailRow {
 	}
 	if len(payment.Instructions.CreditTransfer) > 0 {
 		ct1 := payment.Instructions.CreditTransfer[0]
-		br.IBAN = ct1.IBAN
-		br.BIC = ct1.BIC
+		br.IBAN = ct1.IBAN.String()
+		br.BIC = ct1.BIC.String()
 		br.FinancialInstitution = ct1.Name
 	}
 

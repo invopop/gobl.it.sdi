@@ -31,7 +31,7 @@ func TestOtherDataToAttribute(t *testing.T) {
 		assert.Equal(t, "not-a-number", a.Text)
 	})
 
-	t.Run("prefers the date over the number and the text", func(t *testing.T) {
+	t.Run("keeps every reference of a block in one attribute", func(t *testing.T) {
 		a := otherDataToAttribute(&OtherData{
 			DataType:      "SCADENZA",
 			TextReference: "ABC-123",
@@ -39,25 +39,26 @@ func TestOtherDataToAttribute(t *testing.T) {
 			DateReference: "2024-03-15",
 		})
 		require.NotNil(t, a)
-		require.NotNil(t, a.Date)
-		assert.Equal(t, "2024-03-15", a.Date.String())
-		assert.Nil(t, a.Amount)
-		assert.Empty(t, a.Text)
-	})
-
-	t.Run("prefers the number over the text", func(t *testing.T) {
-		a := otherDataToAttribute(&OtherData{
-			DataType:      "PESO",
-			TextReference: "ABC-123",
-			NumReference:  "12.50",
-		})
-		require.NotNil(t, a)
+		assert.Equal(t, "ABC-123", a.Text)
 		require.NotNil(t, a.Amount)
 		assert.Equal(t, "12.50", a.Amount.String())
-		assert.Empty(t, a.Text)
+		require.NotNil(t, a.Date)
+		assert.Equal(t, "2024-03-15", a.Date.String())
 	})
 
-	t.Run("falls back to the next reference when the preferred one is invalid", func(t *testing.T) {
+	t.Run("keeps both the text and the number", func(t *testing.T) {
+		a := otherDataToAttribute(&OtherData{
+			DataType:      "CASSA-PREV",
+			TextReference: "ENASARCO TC07",
+			NumReference:  "80.00",
+		})
+		require.NotNil(t, a)
+		assert.Equal(t, "ENASARCO TC07", a.Text)
+		require.NotNil(t, a.Amount)
+		assert.Equal(t, "80.00", a.Amount.String())
+	})
+
+	t.Run("keeps the other references when the date is invalid", func(t *testing.T) {
 		a := otherDataToAttribute(&OtherData{
 			DataType:      "SCADENZA",
 			TextReference: "ABC-123",
@@ -68,10 +69,10 @@ func TestOtherDataToAttribute(t *testing.T) {
 		assert.Nil(t, a.Date)
 		require.NotNil(t, a.Amount)
 		assert.Equal(t, "12.50", a.Amount.String())
-		assert.Empty(t, a.Text)
+		assert.Equal(t, "ABC-123", a.Text)
 	})
 
-	t.Run("falls back to the text when the number is also invalid", func(t *testing.T) {
+	t.Run("drops an unparseable reference when the text is already taken", func(t *testing.T) {
 		a := otherDataToAttribute(&OtherData{
 			DataType:      "SCADENZA",
 			TextReference: "ABC-123",

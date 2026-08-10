@@ -134,6 +134,52 @@ func TestAltriDatiGestionaliAttributes(t *testing.T) {
 		assert.Equal(t, "2024-03-15", od[3].DateReference)
 	})
 
+	t.Run("should map every value of an attribute into a single block", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
+		date := cal.MakeDate(2025, 3, 10)
+		amount := num.MakeAmount(8000, 2)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Lines[0].Item.Attributes = []*org.Attribute{
+				{Type: "INTENTO", Text: "08060120341234567-000001", Date: &date},
+				{Type: "CASSA-PREV", Text: "ENASARCO TC07", Amount: &amount},
+			}
+		})
+
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		od := doc.Body[0].GoodsServices.LineDetails[0].OtherData
+		require.Len(t, od, 2)
+
+		// Declaration of intent: protocol number and the AdE receipt date.
+		assert.Equal(t, "INTENTO", od[0].DataType)
+		assert.Equal(t, "08060120341234567-000001", od[0].TextReference)
+		assert.Equal(t, "2025-03-10", od[0].DateReference)
+		assert.Empty(t, od[0].NumReference)
+
+		// Pension fund: which fund and how much was contributed.
+		assert.Equal(t, "CASSA-PREV", od[1].DataType)
+		assert.Equal(t, "ENASARCO TC07", od[1].TextReference)
+		assert.Equal(t, "80.00", od[1].NumReference)
+		assert.Empty(t, od[1].DateReference)
+	})
+
+	t.Run("should prefer the text over the code, as both share RiferimentoTesto", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Lines[0].Item.Attributes = []*org.Attribute{
+				{Type: "COLORE", Text: "rosso", Code: "RAL5010"},
+			}
+		})
+
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		od := doc.Body[0].GoodsServices.LineDetails[0].OtherData
+		require.Len(t, od, 1)
+		assert.Equal(t, "rosso", od[0].TextReference)
+	})
+
 	t.Run("should fall back to the attribute key when no type is set", func(t *testing.T) {
 		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
 		test.ModifyInvoice(env, func(inv *bill.Invoice) {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/invopop/gobl.fatturapa/test"
 	"github.com/invopop/gobl/bill"
+	"github.com/invopop/gobl/cbc"
 	"github.com/invopop/gobl/num"
 	"github.com/invopop/gobl/pay"
 	"github.com/stretchr/testify/assert"
@@ -70,8 +71,8 @@ func TestPaymentsInConversion(t *testing.T) {
 		// Check credit transfer
 		require.NotEmpty(t, invoice.Payment.Instructions.CreditTransfer)
 		creditTransfer := invoice.Payment.Instructions.CreditTransfer[0]
-		assert.Equal(t, "IT60X0542811101000000123456", creditTransfer.IBAN)
-		assert.Equal(t, "BCITITMM", creditTransfer.BIC)
+		assert.Equal(t, cbc.Code("IT60X0542811101000000123456"), creditTransfer.IBAN)
+		assert.Equal(t, cbc.Code("BCITITMM"), creditTransfer.BIC)
 	})
 
 	t.Run("should convert multiple due dates correctly", func(t *testing.T) {

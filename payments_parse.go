@@ -181,8 +181,8 @@ func goblBillPaymentAddPaymentInstructions(payment *bill.PaymentDetails, payment
 	// Add credit transfer if IBAN or BIC is available
 	if paymentDetail.IBAN != "" || paymentDetail.BIC != "" {
 		creditTransfer := pay.CreditTransfer{
-			IBAN: paymentDetail.IBAN,
-			BIC:  paymentDetail.BIC,
+			IBAN: cbc.Code(paymentDetail.IBAN),
+			BIC:  cbc.Code(paymentDetail.BIC),
 		}
 		if paymentDetail.FinancialInstitution != "" {
 			creditTransfer.Name = paymentDetail.FinancialInstitution
