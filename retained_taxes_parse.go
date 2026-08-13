@@ -150,18 +150,12 @@ func copyExtensions(ext tax.Extensions) tax.Extensions {
 
 // convertRetainedTaxType converts a TipoRitenuta code to a tax category code
 func convertRetainedTaxType(tipoRitenuta string) (cbc.Code, error) {
-	switch tipoRitenuta {
-	case "RT01":
-		return it.TaxCategoryIRPEF, nil
-	case "RT02":
-		return it.TaxCategoryIRES, nil
-	case "RT03":
-		return it.TaxCategoryINPS, nil
-	case "RT04":
-		return it.TaxCategoryENASARCO, nil
-	case "RT05":
-		return it.TaxCategoryENPAM, nil
-	default:
-		return "", fmt.Errorf("unknown TipoRitenuta code: %s", tipoRitenuta)
+	if code := cbc.Code(tipoRitenuta); code != cbc.CodeEmpty {
+		for _, def := range itRegime.Categories {
+			if def.Map[it.KeyFatturaPATipoRitenuta] == code {
+				return def.Code, nil
+			}
+		}
 	}
+	return "", fmt.Errorf("unknown TipoRitenuta code: %s", tipoRitenuta)
 }
