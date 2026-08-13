@@ -10,6 +10,10 @@ import (
 	"github.com/invopop/gobl/tax"
 )
 
+// itRegime provides the category definitions that map retained taxes to their
+// TipoRitenuta codes.
+var itRegime = tax.RegimeDefFor(it.CountryCode)
+
 // RetainedTax represents a retained tax.
 type RetainedTax struct {
 	Type   string `xml:"TipoRitenuta"`
@@ -75,18 +79,10 @@ func retainedExtensionCode(ext tax.Extensions) string {
 }
 
 func findCodeTaxType(cat cbc.Code) (string, error) {
-	switch cat {
-	case it.TaxCategoryIRPEF:
-		return "RT01", nil
-	case it.TaxCategoryIRES:
-		return "RT02", nil
-	case it.TaxCategoryINPS:
-		return "RT03", nil
-	case it.TaxCategoryENASARCO:
-		return "RT04", nil
-	case it.TaxCategoryENPAM:
-		return "RT05", nil
-	default:
-		return "", fmt.Errorf("could not find TipoRitenuta code for tax category %s", cat)
+	if def := itRegime.CategoryDef(cat); def != nil {
+		if code := def.Map[it.KeyFatturaPATipoRitenuta]; code != cbc.CodeEmpty {
+			return code.String(), nil
+		}
 	}
+	return "", fmt.Errorf("could not find TipoRitenuta code for tax category %s", cat)
 }
