@@ -46,6 +46,7 @@ The FatturaPA XML schema is quite large and complex. This library is not complet
 - Simplified invoices are not currently supported (please get in touch if you need this).
 - FatturaPA allows multiple invoices within the document, but this library only supports a single invoice per transmission.
 - Only a subset of payment methods (ModalitaPagamento) are supported. See `payments.go` for the list of supported codes.
+- Party identifiers are substituted where FatturaPA expects a placeholder instead of a real value, so a GOBL party should carry only the identifiers it actually has. A non-EU business's own tax number is not transmitted, since only EU VAT numbers are meaningful to SDI, and a customer outside Italy is always addressed as undeliverable whatever inbox it carries. See `parties.go` and `transmission.go` for the values.
 
 Some of the optional elements currently not supported include:
 
@@ -57,42 +58,6 @@ Converting from FatturaPA to GOBL has some limitations:
 
 - Currently, only one invoice per XML file is supported. FatturaPA allows multiple invoices in a single transmission, but this library only processes the first one.
 - Digital signature validation is not fully implemented. While the library can parse signed documents, it does not currently validate all aspects of the signature.
-
-## Party identification
-
-FatturaPA identifies parties by their *partita IVA* (VAT number) or *codice
-fiscale*, and expects specific values where a party has neither. This library
-supplies them during conversion, so a GOBL party should carry only the
-identifiers it actually has.
-
-In GOBL, the VAT number goes in `tax_id` and the *codice fiscale* in an
-`identities` entry keyed `it-fiscal-code`. A party may carry both; they convert
-independently into `IdFiscaleIVA` and `CodiceFiscale`. GOBL normalization strips
-a country prefix from `tax_id.code`, so codes reaching the converter never carry
-one.
-
-For the customer's `DatiTrasmissione` and `DatiAnagrafici`:
-
-| GOBL customer | `IdPaese` / `IdCodice` | `CodiceDestinatario` |
-| --- | --- | --- |
-| Italian, with `tax_id.code` | `IT` and the code | the `it-sdi-code` inbox, else `0000000` |
-| Italian, no `tax_id.code` | omitted | the `it-sdi-code` inbox, else `0000000` |
-| EU, with `tax_id.code` | its country and the code | `XXXXXXX` |
-| Non-EU, with `tax_id.code` | its country and `OO99999999999` | `XXXXXXX` |
-| Non-Italian, no `tax_id.code` | its country and `0000000` | `XXXXXXX` |
-
-Three consequences worth knowing:
-
-- `CodiceDestinatario` is `XXXXXXX` for every non-Italian customer, whatever
-  inbox the party carries. SDI does not deliver outside Italy.
-- `0000000` on an Italian customer leaves delivery to whichever channel the
-  recipient registered with the tax authority. An `it-sdi-pec` inbox is written
-  to `PECDestinatario` alongside it.
-- Only EU VAT numbers are meaningful to SDI, so a non-EU party's own tax number
-  is replaced. Its country is enough.
-
-Converting back, `CodiceDestinatario` values of `0000000` and `XXXXXXX` produce
-no inbox, and a customer `IdCodice` of `0000000` produces no `tax_id.code`.
 
 ## Usage
 
