@@ -15,6 +15,35 @@ import (
 
 func normalizeInvoice(inv *bill.Invoice) {
 	normalizeSupplier(inv.Supplier)
+	normalizeIssuerType(inv)
+}
+
+// normalizeIssuerType reflects who compiled the invoice. Self-billing only
+// implies the customer did when the parties are distinguishable: some Italian
+// self-billed document types (e.g. TD27) are filed by the supplier itself.
+func normalizeIssuerType(inv *bill.Invoice) {
+	if inv.HasTags(tax.TagSelfBilled) && invoicePartiesDiffer(inv.Supplier, inv.Customer) {
+		inv.Tax = inv.Tax.MergeExtensions(tax.ExtensionsOf(cbc.CodeMap{
+			ExtKeyIssuerType: ExtCodeIssuerTypeCustomer,
+		}))
+	}
+	if inv.Ordering != nil && inv.Ordering.Issuer != nil {
+		inv.Tax = inv.Tax.MergeExtensions(tax.ExtensionsOf(cbc.CodeMap{
+			ExtKeyIssuerType: ExtCodeIssuerTypeThirdParty,
+		}))
+	}
+}
+
+// invoicePartiesDiffer reports whether both parties carry tax IDs that
+// identify them as different entities.
+func invoicePartiesDiffer(s, c *org.Party) bool {
+	if s == nil || c == nil || s.TaxID == nil || c.TaxID == nil {
+		return false
+	}
+	if s.TaxID.Code == "" || c.TaxID.Code == "" {
+		return false
+	}
+	return s.TaxID.Country != c.TaxID.Country || s.TaxID.Code != c.TaxID.Code
 }
 
 func normalizeSupplier(party *org.Party) {
@@ -171,6 +200,10 @@ func billInvoiceRules() *rules.Set {
 			),
 		),
 		// Payment: instructions required when terms have due dates
+		// Issuer: identification required when a third party issues the invoice
+		rules.Assert("23", "issuer tax ID code or fiscal code is required",
+			is.Func("issuer identification check", invoiceIssuerHasTaxIDCodeOrFiscalCode),
+		),
 		rules.Assert("21", "payment instructions are required when terms with due dates are present",
 			is.Func("payment instructions check", invoicePaymentInstructionsPresent),
 		),
@@ -255,6 +288,14 @@ func invoiceCustomerHasFiscalCodeIdentity(val any) bool {
 		return false
 	}
 	return org.IdentityForKey(ids, it.IdentityKeyFiscalCode) != nil
+}
+
+func invoiceIssuerHasTaxIDCodeOrFiscalCode(val any) bool {
+	inv, ok := val.(*bill.Invoice)
+	if !ok || inv == nil || inv.Ordering == nil || inv.Ordering.Issuer == nil {
+		return true
+	}
+	return hasTaxIDCode(inv.Ordering.Issuer) || hasFiscalCode(inv.Ordering.Issuer)
 }
 
 func invoiceHasDeferredTag(val any) bool {
