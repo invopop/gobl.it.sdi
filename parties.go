@@ -3,7 +3,7 @@ package fatturapa
 import (
 	"errors"
 
-	sdi "github.com/invopop/gobl.fatturapa/addon"
+	sdi "github.com/invopop/gobl.it.sdi/addon"
 	"github.com/invopop/gobl/l10n"
 	"github.com/invopop/gobl/org"
 	"github.com/invopop/gobl/regimes/it"

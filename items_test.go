@@ -3,7 +3,7 @@ package fatturapa_test
 import (
 	"testing"
 
-	"github.com/invopop/gobl.fatturapa/test"
+	"github.com/invopop/gobl.it.sdi/test"
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/cal"
 	"github.com/invopop/gobl/num"

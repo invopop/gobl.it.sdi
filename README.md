@@ -1,15 +1,16 @@
-# GOBL - FatturaPA Tools
+# GOBL - Italy SDI
 
-Convert GOBL documents to and from Italy's FatturaPA format.
+Italian electronic invoicing for GOBL: the `it-sdi-v1` addon and conversion to
+and from the FatturaPA format.
 
 Copyright [Invopop Ltd.](https://invopop.com) 2023. Released publicly under the [Apache License Version 2.0](LICENSE). For commercial licenses please contact the [dev team at invopop](mailto:dev@invopop.com). In order to accept contributions to this library we will require transferring copyrights to Invopop Ltd.
 
-[![Lint](https://github.com/invopop/gobl.fatturapa/actions/workflows/lint.yaml/badge.svg)](https://github.com/invopop/gobl.fatturapa/actions/workflows/lint.yaml)
-[![Test Go](https://github.com/invopop/gobl.fatturapa/actions/workflows/test.yaml/badge.svg)](https://github.com/invopop/gobl.fatturapa/actions/workflows/test.yaml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/invopop/gobl.fatturapa)](https://goreportcard.com/report/github.com/invopop/gobl.fatturapa)
-[![GoDoc](https://godoc.org/github.com/invopop/gobl.fatturapa?status.svg)](https://godoc.org/github.com/invopop/gobl.fatturapa)
-![Latest Tag](https://img.shields.io/github/v/tag/invopop/gobl.fatturapa)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/invopop/gobl.fatturapa)
+[![Lint](https://github.com/invopop/gobl.it.sdi/actions/workflows/lint.yaml/badge.svg)](https://github.com/invopop/gobl.it.sdi/actions/workflows/lint.yaml)
+[![Test Go](https://github.com/invopop/gobl.it.sdi/actions/workflows/test.yaml/badge.svg)](https://github.com/invopop/gobl.it.sdi/actions/workflows/test.yaml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/invopop/gobl.it.sdi)](https://goreportcard.com/report/github.com/invopop/gobl.it.sdi)
+[![GoDoc](https://godoc.org/github.com/invopop/gobl.it.sdi?status.svg)](https://godoc.org/github.com/invopop/gobl.it.sdi)
+![Latest Tag](https://img.shields.io/github/v/tag/invopop/gobl.it.sdi)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/invopop/gobl.it.sdi)
 
 ## Introduction
 
@@ -19,6 +20,21 @@ FatturaPA defines two versions of invoices:
 - Simplified invoices, `FatturaElettronicaSemplificata` type `FSM10` defined in the v1.0 schema, with a reduced set of requirements but can only be used for sales of less then €400, as of writing.
 
 Unlike other tax regimes, Italy requires simplified invoices to include the customer's tax ID. For "cash register" style receipts locally called "Scontrinos", another format and API is used.
+
+## The it-sdi addon
+
+The `addon` package implements the `it-sdi-v1` GOBL addon: the extensions,
+scenarios, normalizers, and validation rules a GOBL document needs to be
+converted to a valid FatturaPA file, plus the mapping of SDI notification
+codes to document statuses.
+
+The addon is registered on GOBL's approved external addon list, so `it-sdi-v1`
+is a recognized `$addons` value everywhere. To calculate or validate documents
+that declare it, import the package:
+
+```go
+import _ "github.com/invopop/gobl.it.sdi/addon"
+```
 
 ## Sources
 
@@ -169,10 +185,10 @@ Note that when converting from FatturaPA to GOBL:
 
 ### CLI
 
-The command line interface can be useful for situations when you're using a language other than Golang in your application. Download one of the [pre-compiled `gobl.fatturapa` releases](https://github.com/invopop/gobl.fatturapa/releases) or install with:
+The command line interface can be useful for situations when you're using a language other than Golang in your application. Download one of the [pre-compiled `gobl.fatturapa` releases](https://github.com/invopop/gobl.it.sdi/releases) or install with:
 
 ```bash
-go install github.com/invopop/gobl.fatturapa/cmd/gobl.fatturapa
+go install github.com/invopop/gobl.it.sdi/cmd/gobl.fatturapa
 ```
 
 #### Converting GOBL to FatturaPA

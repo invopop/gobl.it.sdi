@@ -33,5 +33,5 @@ changelog:
 release:
   github:
     owner: invopop
-    name: gobl.fatturapa
+    name: gobl.it.sdi
   prerelease: auto

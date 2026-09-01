@@ -15,7 +15,7 @@ import (
 	"golang.org/x/text/transform"
 
 	"github.com/invopop/gobl"
-	sdi "github.com/invopop/gobl.fatturapa/addon"
+	sdi "github.com/invopop/gobl.it.sdi/addon"
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/tax"
 	"github.com/invopop/xmlctx"

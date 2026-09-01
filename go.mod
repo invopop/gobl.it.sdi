@@ -1,4 +1,4 @@
-module github.com/invopop/gobl.fatturapa
+module github.com/invopop/gobl.it.sdi
 
 go 1.25.0
 

@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	sdi "github.com/invopop/gobl.fatturapa/addon"
-	"github.com/invopop/gobl.fatturapa/test"
+	sdi "github.com/invopop/gobl.it.sdi/addon"
+	"github.com/invopop/gobl.it.sdi/test"
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/cal"
 	"github.com/invopop/gobl/cbc"

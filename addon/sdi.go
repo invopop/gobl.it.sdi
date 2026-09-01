@@ -62,7 +62,7 @@ func newAddon() *tax.AddonDef {
 				Italy exchanges electronic invoices in the FatturaPA XML format through the tax
 				authority's Sistema di Interscambio (SDI). This addon ensures GOBL documents carry
 				the fields and extensions needed to produce valid FatturaPA files with
-				[gobl.fatturapa](https://github.com/invopop/gobl.fatturapa).
+				[gobl.fatturapa](https://github.com/invopop/gobl.it.sdi).
 
 				## Customer identification
 

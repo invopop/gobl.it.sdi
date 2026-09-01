@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	sdi "github.com/invopop/gobl.fatturapa/addon"
+	sdi "github.com/invopop/gobl.it.sdi/addon"
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/cbc"
 	"github.com/invopop/gobl/currency"
