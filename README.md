@@ -7,6 +7,7 @@ Copyright [Invopop Ltd.](https://invopop.com) 2023. Released publicly under the 
 
 [![Lint](https://github.com/invopop/gobl.it.sdi/actions/workflows/lint.yaml/badge.svg)](https://github.com/invopop/gobl.it.sdi/actions/workflows/lint.yaml)
 [![Test Go](https://github.com/invopop/gobl.it.sdi/actions/workflows/test.yaml/badge.svg)](https://github.com/invopop/gobl.it.sdi/actions/workflows/test.yaml)
+[![codecov](https://codecov.io/gh/invopop/gobl.it.sdi/graph/badge.svg)](https://codecov.io/gh/invopop/gobl.it.sdi)
 [![Go Report Card](https://goreportcard.com/badge/github.com/invopop/gobl.it.sdi)](https://goreportcard.com/report/github.com/invopop/gobl.it.sdi)
 [![GoDoc](https://godoc.org/github.com/invopop/gobl.it.sdi?status.svg)](https://godoc.org/github.com/invopop/gobl.it.sdi)
 ![Latest Tag](https://img.shields.io/github/v/tag/invopop/gobl.it.sdi)
