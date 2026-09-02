@@ -25,6 +25,12 @@ type Supplier struct {
 	Contact                *Contact                `xml:"Contatti,omitempty"`
 }
 
+// ThirdPartyIssuer describes the entity that issued the invoice on behalf of
+// the supplier.
+type ThirdPartyIssuer struct {
+	Identity *Identity `xml:"DatiAnagrafici"`
+}
+
 // Customer contains the details about who the invoice is addressed to.
 type Customer struct {
 	Identity *Identity `xml:"DatiAnagrafici"`
@@ -154,6 +160,28 @@ func newCustomer(c *org.Party) *Customer {
 	nc.Identity = da
 
 	return nc
+}
+
+func newThirdPartyIssuer(p *org.Party) *ThirdPartyIssuer {
+	if p == nil {
+		return nil
+	}
+
+	// RegimeFiscale is deliberately left unset: it is not part of
+	// DatiAnagraficiTerzoIntermediarioType.
+	id := &Identity{
+		Profile: newProfile(p),
+	}
+	// IdFiscaleIVA is optional here, so no placeholder code is substituted for
+	// a missing one as it is for foreign customers.
+	if p.TaxID != nil && p.TaxID.Code != "" {
+		id.TaxID = partyTaxID(p.TaxID)
+	}
+	if fc := org.IdentityForKey(p.Identities, it.IdentityKeyFiscalCode); fc != nil {
+		id.FiscalCode = fc.Code.String()
+	}
+
+	return &ThirdPartyIssuer{Identity: id}
 }
 
 func newProfile(party *org.Party) *Profile {
