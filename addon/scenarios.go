@@ -123,12 +123,6 @@ var invoiceTags = &tax.TagSet{
 				i18n.IT: "Beni ammortizzabili",
 			},
 		},
-		{
-			Key: tax.TagB2G,
-			Name: i18n.String{
-				i18n.EN: "Business to Government",
-			},
-		},
 	},
 }
 
@@ -382,7 +376,7 @@ var invoiceScenarios = &tax.ScenarioSet{
 			Types: []cbc.Key{bill.InvoiceTypeStandard},
 			Tags:  []cbc.Key{TagDepreciableAssets},
 			Name: i18n.String{
-				i18n.EN: "Sale of depreciable assets and for internal transfers (ex art.36 DPR 633/72",
+				i18n.EN: "Sale of depreciable assets and for internal transfers (ex art.36 DPR 633/72)",
 				i18n.IT: "Cessione di beni ammortizzabili e per passaggi interni - art.36 DPR 633/72",
 			},
 			Ext: tax.ExtensionsOf(cbc.CodeMap{

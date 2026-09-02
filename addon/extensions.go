@@ -31,12 +31,9 @@ var extensions = []*cbc.Definition{
 		},
 		Desc: i18n.String{
 			i18n.EN: here.Doc(`
-				Code used to describe the transmission format of the invoice. By default
-				the value "FPR12" is used unless the user explicitly sets the value
-				to something else.
-
-				Normally this will only be needed when the invoice is to be sent to governmental
-				bodies and must use the "FPA12" format.
+				Code used to describe the transmission format of the invoice. It is set
+				during calculation from the invoice's tags: "FPA12" when the invoice
+				carries the "b2g" tag, and "FPR12" otherwise.
 			`),
 		},
 		Values: []*cbc.Definition{
@@ -205,7 +202,7 @@ var extensions = []*cbc.Definition{
 			{
 				Code: "TD26",
 				Name: i18n.String{
-					i18n.EN: "Sale of depreciable assets and for internal transfers (ex art.36 DPR 633/72",
+					i18n.EN: "Sale of depreciable assets and for internal transfers (ex art.36 DPR 633/72)",
 					i18n.IT: "Cessione di beni ammortizzabili e per passaggi interni - art.36 DPR 633/72",
 				},
 			},
@@ -742,7 +739,7 @@ var extensions = []*cbc.Definition{
 				},
 			},
 			{
-				Code: "Mp06",
+				Code: "MP06",
 				Name: i18n.String{
 					i18n.EN: "Promissory Note",
 					i18n.IT: "Vaglia cambiario",
@@ -987,7 +984,7 @@ var extensions = []*cbc.Definition{
 				Code: "TC12",
 				Name: i18n.String{
 					i18n.EN: "National pension and welfare board for agricultural employees (ENPAIA)",
-					i18n.IT: "Ente nazionale di previdenza e assistenza per i periti industriali e i periti industriali laureati (ENPAIA)",
+					i18n.IT: "Ente nazionale di previdenza e assistenza per gli impiegati dell'agricoltura (ENPAIA)",
 				},
 			},
 			{

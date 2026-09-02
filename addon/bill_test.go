@@ -743,7 +743,7 @@ func TestInvoiceLineValidation(t *testing.T) {
 		err := rules.Validate(inv, withSDIContext())
 		// SDI addon shouldn't add errors for nil lines
 		if err != nil {
-			assert.NotContains(t, err.Error(), "IT-SDI-V1-BILL-INVOICE-17")
+			assert.NotContains(t, err.Error(), "GOBL-IT-SDI-BILL-INVOICE-17")
 		}
 	})
 
@@ -755,7 +755,7 @@ func TestInvoiceLineValidation(t *testing.T) {
 		err := rules.Validate(inv, withSDIContext())
 		// SDI addon shouldn't add item name errors for nil items
 		if err != nil {
-			assert.NotContains(t, err.Error(), "IT-SDI-V1-BILL-INVOICE-18")
+			assert.NotContains(t, err.Error(), "GOBL-IT-SDI-BILL-INVOICE-18")
 		}
 	})
 
