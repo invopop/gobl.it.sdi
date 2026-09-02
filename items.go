@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"unicode"
 
-	"github.com/invopop/gobl/addons/it/sdi"
+	sdi "github.com/invopop/gobl.it.sdi/addon"
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/i18n"
 	"github.com/invopop/gobl/org"

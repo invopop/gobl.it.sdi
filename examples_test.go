@@ -10,7 +10,7 @@ import (
 
 	"encoding/xml"
 
-	"github.com/invopop/gobl.fatturapa/test"
+	"github.com/invopop/gobl.it.sdi/test"
 	"github.com/invopop/gobl/bill"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

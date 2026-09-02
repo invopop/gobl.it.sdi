@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/invopop/gobl"
-	fatturapa "github.com/invopop/gobl.fatturapa"
+	fatturapa "github.com/invopop/gobl.it.sdi"
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/l10n"
 	"github.com/invopop/gobl/schema"
