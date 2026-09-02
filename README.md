@@ -29,13 +29,16 @@ scenarios, normalizers, and validation rules a GOBL document needs to be
 converted to a valid FatturaPA file, plus the mapping of SDI notification
 codes to document statuses.
 
-The addon is registered on GOBL's approved external addon list, so `it-sdi-v1`
-is a recognized `$addons` value everywhere. To calculate or validate documents
-that declare it, import the package:
+To calculate or validate documents that declare `it-sdi-v1`, import the
+package:
 
 ```go
 import _ "github.com/invopop/gobl.it.sdi/addon"
 ```
+
+The addon also has to be on GOBL's approved external addon list for `it-sdi-v1`
+to be accepted as an `$addons` value; that entry arrives with the GOBL release
+that removes the in-core copy.
 
 ## Sources
 
