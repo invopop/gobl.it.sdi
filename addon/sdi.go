@@ -40,6 +40,7 @@ func init() {
 		taxComboRules(),
 		payInstructionsRules(),
 		payAdvanceRules(),
+		payDueDateRules(),
 	)
 	norm.RegisterWithGuard(
 		is.InContext(tax.AddonIn(V1)),

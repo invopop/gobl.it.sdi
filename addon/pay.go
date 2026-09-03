@@ -4,8 +4,10 @@ import (
 	"fmt"
 
 	"github.com/invopop/gobl/cbc"
+	"github.com/invopop/gobl/num"
 	"github.com/invopop/gobl/pay"
 	"github.com/invopop/gobl/rules"
+	"github.com/invopop/gobl/rules/is"
 	"github.com/invopop/gobl/tax"
 )
 
@@ -103,6 +105,16 @@ func payAdvanceRules() *rules.Set {
 				fmt.Sprintf("payment advance requires '%s' extension", ExtKeyPaymentMeans),
 				tax.ExtensionsRequire(ExtKeyPaymentMeans),
 			),
+		),
+	)
+}
+
+// payDueDateRules ensures every due date carries the non-zero amount that the
+// mandatory FatturaPA ImportoPagamento element is built from.
+func payDueDateRules() *rules.Set {
+	return rules.For(new(pay.DueDate),
+		rules.Field("amount",
+			rules.Assert("01", "amount is required", is.Present, num.NotZero),
 		),
 	)
 }
