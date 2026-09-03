@@ -6,6 +6,7 @@ import (
 
 	sdi "github.com/invopop/gobl.it.sdi/addon"
 	"github.com/invopop/gobl/bill"
+	"github.com/invopop/gobl/cal"
 	"github.com/invopop/gobl/cbc"
 	"github.com/invopop/gobl/num"
 	"github.com/invopop/gobl/pay"
@@ -89,4 +90,56 @@ func TestPayInstructionsValidation(t *testing.T) {
 	require.NoError(t, inv.Calculate())
 	err = rules.Validate(inv)
 	assert.ErrorContains(t, err, fmt.Sprintf("payment instructions require '%s' extension", sdi.ExtKeyPaymentMeans))
+}
+
+func TestPayDueDateValidation(t *testing.T) {
+	t.Run("with amount", func(t *testing.T) {
+		p := &pay.Terms{
+			DueDates: []*pay.DueDate{
+				{
+					Date:   cal.NewDate(2025, 1, 1),
+					Amount: num.NewAmount(1000, 2),
+				},
+			},
+		}
+		err := rules.Validate(p, tax.AddonContext(sdi.V1))
+		assert.NoError(t, err)
+	})
+
+	t.Run("zero amount", func(t *testing.T) {
+		p := &pay.Terms{
+			DueDates: []*pay.DueDate{
+				{
+					Date:   cal.NewDate(2025, 1, 1),
+					Amount: num.NewAmount(0, 2),
+				},
+			},
+		}
+		err := rules.Validate(p, tax.AddonContext(sdi.V1))
+		assert.ErrorContains(t, err, "amount is required")
+	})
+
+	t.Run("missing amount", func(t *testing.T) {
+		p := &pay.Terms{
+			DueDates: []*pay.DueDate{
+				{
+					Date: cal.NewDate(2025, 1, 1),
+				},
+			},
+		}
+		err := rules.Validate(p, tax.AddonContext(sdi.V1))
+		assert.ErrorContains(t, err, "amount is required")
+	})
+
+	t.Run("missing amount without addon", func(t *testing.T) {
+		p := &pay.Terms{
+			DueDates: []*pay.DueDate{
+				{
+					Date: cal.NewDate(2025, 1, 1),
+				},
+			},
+		}
+		err := rules.Validate(p)
+		assert.NoError(t, err)
+	})
 }
