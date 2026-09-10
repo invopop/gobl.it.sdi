@@ -60,13 +60,40 @@ func TestDettaglioLineePeriod(t *testing.T) {
 	t.Run("should omit missing period date", func(t *testing.T) {
 		env := test.LoadTestFile("invoice-services-period.json", test.PathGOBLFatturaPA)
 		test.ModifyInvoice(env, func(inv *bill.Invoice) {
-			inv.Lines[0].Period.End = cal.Date{}
+			inv.Lines[0].Period.End = nil
 		})
 		doc, err := test.ConvertFromGOBL(env)
 		require.NoError(t, err)
 
 		dl := doc.Body[0].GoodsServices.LineDetails[0]
 		assert.Equal(t, "2024-01-01", dl.PeriodStart)
+		assert.Empty(t, dl.PeriodEnd)
+	})
+
+	t.Run("should omit missing period start", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-services-period.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Lines[0].Period.Start = nil
+		})
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		dl := doc.Body[0].GoodsServices.LineDetails[0]
+		assert.Empty(t, dl.PeriodStart)
+		assert.Equal(t, "2024-01-31", dl.PeriodEnd)
+	})
+
+	t.Run("should omit zero period dates", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-services-period.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Lines[0].Period.Start = &cal.Date{}
+			inv.Lines[0].Period.End = &cal.Date{}
+		})
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		dl := doc.Body[0].GoodsServices.LineDetails[0]
+		assert.Empty(t, dl.PeriodStart)
 		assert.Empty(t, dl.PeriodEnd)
 	})
 }

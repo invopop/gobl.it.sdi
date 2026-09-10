@@ -92,10 +92,10 @@ func generateLineDetails(inv *bill.Invoice) []*LineDetail {
 		}
 
 		if line.Period != nil {
-			if !line.Period.Start.IsZero() {
+			if line.Period.Start != nil && !line.Period.Start.IsZero() {
 				d.PeriodStart = line.Period.Start.String()
 			}
-			if !line.Period.End.IsZero() {
+			if line.Period.End != nil && !line.Period.End.IsZero() {
 				d.PeriodEnd = line.Period.End.String()
 			}
 		}

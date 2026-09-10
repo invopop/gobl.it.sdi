@@ -1,6 +1,8 @@
 package fatturapa
 
 import (
+	"fmt"
+
 	sdi "github.com/invopop/gobl.it.sdi/addon"
 	"github.com/invopop/gobl/bill"
 )
@@ -27,9 +29,9 @@ type PaymentDetailRow struct {
 	Code                 string `xml:"CodicePagamento,omitempty"`
 }
 
-func newPaymentData(inv *bill.Invoice) []*PaymentData {
+func newPaymentData(inv *bill.Invoice) ([]*PaymentData, error) {
 	if inv.Payment == nil {
-		return nil
+		return nil, nil
 	}
 
 	paymentData := []*PaymentData{}
@@ -42,7 +44,7 @@ func newPaymentData(inv *bill.Invoice) []*PaymentData {
 	}
 
 	if inv.Payment.Instructions == nil {
-		return paymentData
+		return paymentData, nil
 	}
 
 	// Determine payment condition based on number of due dates
@@ -51,9 +53,12 @@ func newPaymentData(inv *bill.Invoice) []*PaymentData {
 		condition = condizioniPagamentoInstallments
 	}
 
-	paymentDetails := preparePaymentDetails(inv)
+	paymentDetails, err := preparePaymentDetails(inv)
+	if err != nil {
+		return nil, err
+	}
 	if len(paymentDetails) == 0 {
-		return paymentData
+		return paymentData, nil
 	}
 
 	paymentData = append(paymentData, &PaymentData{
@@ -61,7 +66,7 @@ func newPaymentData(inv *bill.Invoice) []*PaymentData {
 		Payments:   paymentDetails,
 	})
 
-	return paymentData
+	return paymentData, nil
 }
 
 func prepareAdvancePaymentDetails(inv *bill.Invoice) []*PaymentDetailRow {
@@ -87,7 +92,7 @@ func prepareAdvancePaymentDetails(inv *bill.Invoice) []*PaymentDetailRow {
 	return dp
 }
 
-func preparePaymentDetails(inv *bill.Invoice) []*PaymentDetailRow {
+func preparePaymentDetails(inv *bill.Invoice) ([]*PaymentDetailRow, error) {
 	var dp []*PaymentDetailRow
 	payment := inv.Payment
 
@@ -104,10 +109,14 @@ func preparePaymentDetails(inv *bill.Invoice) []*PaymentDetailRow {
 	// First check if there are multiple due dates, and if so, create a
 	// DettaglioPagamento for each one.
 	if terms := payment.Terms; terms != nil {
-		for _, dueDate := range payment.Terms.DueDates {
+		for i, dueDate := range terms.DueDates {
+			// ImportoPagamento is mandatory, so there is nothing to emit without it.
+			if dueDate.Amount == nil {
+				return nil, fmt.Errorf("due date %d has no amount", i)
+			}
 			r := br // copy
 			r.DueDate = dueDate.Date.String()
-			r.Amount = formatAmount2(&dueDate.Amount)
+			r.Amount = formatAmount2(dueDate.Amount)
 			dp = append(dp, &r)
 		}
 	}
@@ -119,7 +128,7 @@ func preparePaymentDetails(inv *bill.Invoice) []*PaymentDetailRow {
 		dp = append(dp, &br)
 	}
 
-	return dp
+	return dp, nil
 }
 
 // checkInstallments checks if the payment method should be by installments
@@ -128,7 +137,8 @@ func checkInstallments(inv *bill.Invoice) bool {
 		// check that if there is more than one due date, then the method should be by installments
 		(len(inv.Payment.Terms.DueDates) > 1 ||
 			// check that if there is only one due date but the ammount is less than the total payable, then the method should be by installments
-			(len(inv.Payment.Terms.DueDates) == 1 && inv.Payment.Terms.DueDates[0].Amount.Compare(inv.Totals.Payable) == -1)) {
+			(len(inv.Payment.Terms.DueDates) == 1 && inv.Payment.Terms.DueDates[0].Amount != nil &&
+				inv.Payment.Terms.DueDates[0].Amount.Compare(inv.Totals.Payable) == -1)) {
 		return true
 	}
 	return false

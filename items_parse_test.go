@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"os"
 	"path/filepath"
+	"regexp"
 	"testing"
 
 	sdi "github.com/invopop/gobl.it.sdi/addon"
@@ -264,5 +265,36 @@ func TestAltriDatiGestionaliAttributesInConversion(t *testing.T) {
 		assert.Equal(t, cbc.Code("SCADENZA"), attrs[2].Type)
 		require.NotNil(t, attrs[2].Date)
 		assert.Equal(t, "2024-03-15", attrs[2].Date.String())
+	})
+}
+
+// TestItemsPeriodParse checks that a period with a single bound keeps only that bound.
+func TestItemsPeriodParse(t *testing.T) {
+	load := func(t *testing.T, drop string) *bill.Invoice {
+		t.Helper()
+		data, err := os.ReadFile(filepath.Join(test.GetDataPath(test.PathFatturaPAGOBL), "invoice-services-period.xml"))
+		require.NoError(t, err)
+		data = []byte(regexp.MustCompile(`\s*<`+drop+`>[^<]*</`+drop+`>`).ReplaceAllString(string(data), ""))
+		env, err := test.ConvertToGOBL(data)
+		require.NoError(t, err)
+		inv, ok := env.Extract().(*bill.Invoice)
+		require.True(t, ok)
+		return inv
+	}
+
+	t.Run("should keep only the start date", func(t *testing.T) {
+		inv := load(t, "DataFinePeriodo")
+		require.NotNil(t, inv.Lines[0].Period)
+		require.NotNil(t, inv.Lines[0].Period.Start)
+		assert.Equal(t, "2024-01-01", inv.Lines[0].Period.Start.String())
+		assert.Nil(t, inv.Lines[0].Period.End)
+	})
+
+	t.Run("should keep only the end date", func(t *testing.T) {
+		inv := load(t, "DataInizioPeriodo")
+		require.NotNil(t, inv.Lines[0].Period)
+		assert.Nil(t, inv.Lines[0].Period.Start)
+		require.NotNil(t, inv.Lines[0].Period.End)
+		assert.Equal(t, "2024-01-31", inv.Lines[0].Period.End.String())
 	})
 }
