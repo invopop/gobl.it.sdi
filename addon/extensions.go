@@ -20,6 +20,11 @@ const (
 
 	ExtKeyLiquidationState cbc.Key = "it-sdi-liquidation-state"
 	ExtKeyShareholderState cbc.Key = "it-sdi-shareholder-state"
+
+	// ExtKeyNotification records an SDI notification outcome on a bill.Status
+	// line: either the code SDI emits for the event (RC/NS/MC/AT/DT) or the
+	// recipient response resolved from a Notifica Esito (EC01/EC02).
+	ExtKeyNotification cbc.Key = "it-sdi-notification"
 )
 
 var extensions = []*cbc.Definition{
@@ -1115,6 +1120,93 @@ var extensions = []*cbc.Definition{
 				Name: i18n.String{
 					i18n.EN: "Multiple shareholders",
 					i18n.IT: "Più soci",
+				},
+			},
+		},
+	},
+	{
+		Key: ExtKeyNotification,
+		Name: i18n.String{
+			i18n.EN: "SDI Notification",
+			i18n.IT: "Notifica SDI",
+		},
+		Desc: i18n.String{
+			i18n.EN: here.Doc(`
+				Outcome SDI reports for a submitted invoice, recorded on a
+				bill.Status line. RC/NS/MC/AT/DT are the codes SDI emits
+				directly; EC01/EC02 are the recipient responses resolved from a
+				Notifica Esito.
+			`),
+		},
+		Values: []*cbc.Definition{
+			{
+				Code: "RC",
+				Name: i18n.String{
+					i18n.EN: "Delivery receipt",
+					i18n.IT: "Ricevuta di Consegna",
+				},
+				Desc: i18n.String{
+					i18n.EN: "Delivered to the recipient's channel.",
+				},
+			},
+			{
+				Code: "NS",
+				Name: i18n.String{
+					i18n.EN: "Rejection notice",
+					i18n.IT: "Notifica di Scarto",
+				},
+				Desc: i18n.String{
+					i18n.EN: "SDI rejected the file at its validation gate.",
+				},
+			},
+			{
+				Code: "MC",
+				Name: i18n.String{
+					i18n.EN: "Failed delivery",
+					i18n.IT: "Mancata Consegna",
+				},
+				Desc: i18n.String{
+					i18n.EN: "SDI accepted the file but could not deliver it; parked in the recipient's cassetto fiscale (tax drawer).",
+				},
+			},
+			{
+				Code: "AT",
+				Name: i18n.String{
+					i18n.EN: "Transmission attestation",
+					i18n.IT: "Attestazione di Trasmissione",
+				},
+				Desc: i18n.String{
+					i18n.EN: "Public-administration recipients only: legal proof of transmission when delivery was impossible. The invoice remains valid; the sender must deliver it, together with the attestation, to the recipient outside SDI.",
+				},
+			},
+			{
+				Code: "DT",
+				Name: i18n.String{
+					i18n.EN: "Deadline expiry",
+					i18n.IT: "Decorrenza Termini",
+				},
+				Desc: i18n.String{
+					i18n.EN: "Public-administration recipients only: no accept or reject received within 15 days; SDI closes the process and the invoice can no longer be rejected.",
+				},
+			},
+			{
+				Code: "EC01",
+				Name: i18n.String{
+					i18n.EN: "Acceptance",
+					i18n.IT: "Accettazione",
+				},
+				Desc: i18n.String{
+					i18n.EN: "Recipient (public administration) accepted the invoice.",
+				},
+			},
+			{
+				Code: "EC02",
+				Name: i18n.String{
+					i18n.EN: "Refusal",
+					i18n.IT: "Rifiuto",
+				},
+				Desc: i18n.String{
+					i18n.EN: "Recipient (public administration) rejected the invoice.",
 				},
 			},
 		},
