@@ -85,16 +85,18 @@ func goblBillInvoiceAddLineDetails(inv *bill.Invoice, lineDetails []*LineDetail,
 		if detail.PeriodStart != "" || detail.PeriodEnd != "" {
 			p := &cal.Period{}
 			if detail.PeriodStart != "" {
-				p.Start, err = parseDate(detail.PeriodStart)
+				start, err := parseDate(detail.PeriodStart)
 				if err != nil {
 					return fmt.Errorf("parsing period start: %w", err)
 				}
+				p.Start = &start
 			}
 			if detail.PeriodEnd != "" {
-				p.End, err = parseDate(detail.PeriodEnd)
+				end, err := parseDate(detail.PeriodEnd)
 				if err != nil {
 					return fmt.Errorf("parsing period end: %w", err)
 				}
+				p.End = &end
 			}
 			line.Period = p
 		}

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/invopop/gobl.it.sdi/test"
+	"github.com/invopop/gobl/bill"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -39,6 +40,29 @@ func TestPaymentsSimpleIBAN(t *testing.T) {
 		assert.Equal(t, "1388.40", dp.Payments[0].Amount)
 		assert.Equal(t, "IT60X0542811101000000123456", dp.Payments[0].IBAN)
 		assert.Equal(t, "BCITITMM", dp.Payments[0].BIC)
+	})
+}
+
+// ModifyInvoice skips validation, so these documents reach the converter even
+// though the addon rule rejects them.
+func TestPaymentsDueDateWithoutAmount(t *testing.T) {
+	t.Run("should reject a single due date without amount", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-irpef.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Payment.Terms.DueDates = inv.Payment.Terms.DueDates[:1]
+			inv.Payment.Terms.DueDates[0].Amount = nil
+		})
+		_, err := test.ConvertFromGOBL(env)
+		assert.ErrorContains(t, err, "due date 0 has no amount")
+	})
+
+	t.Run("should reject one of several due dates without amount", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-irpef.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Payment.Terms.DueDates[1].Amount = nil
+		})
+		_, err := test.ConvertFromGOBL(env)
+		assert.ErrorContains(t, err, "due date 1 has no amount")
 	})
 }
 

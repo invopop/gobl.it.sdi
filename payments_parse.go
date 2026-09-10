@@ -145,7 +145,7 @@ func goblBillPaymentAddDueDate(payment *bill.PaymentDetails, paymentDetail *Paym
 
 	// Create due date
 	dueDate := &pay.DueDate{
-		Amount: amount,
+		Amount: &amount,
 	}
 
 	// Parse due date

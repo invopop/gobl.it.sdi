@@ -111,7 +111,10 @@ type PriceAdjustment struct {
 func newBody(inv *bill.Invoice) (*Body, error) {
 	dbs := newGoodsServices(inv)
 
-	dp := newPaymentData(inv)
+	dp, err := newPaymentData(inv)
+	if err != nil {
+		return nil, err
+	}
 
 	dg, err := newGeneralData(inv)
 	if err != nil {

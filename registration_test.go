@@ -3,19 +3,19 @@ package fatturapa_test
 import (
 	"testing"
 
-	"github.com/invopop/gobl/cbc"
+	sdi "github.com/invopop/gobl.it.sdi/addon"
 	"github.com/invopop/gobl/tax"
 	"github.com/stretchr/testify/assert"
 )
 
-// This package imports GOBL's aggregate addon list, so a second copy of the
-// addon anywhere in the dependency graph registers it-sdi-v1 twice and breaks
-// tax.AllAddonDefs.
+// TestAddonRegisteredOnce pins that it-sdi-v1 is registered exactly once; a
+// second registration anywhere in the dependency graph makes tax.AllAddonDefs
+// index past the end of its key list.
 func TestAddonRegisteredOnce(t *testing.T) {
 	count := 0
 	assert.NotPanics(t, func() {
 		for _, ad := range tax.AllAddonDefs() {
-			if ad != nil && ad.Key == cbc.Key("it-sdi-v1") {
+			if ad != nil && ad.Key == sdi.V1 {
 				count++
 			}
 		}
