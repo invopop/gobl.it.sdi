@@ -1,0 +1,186 @@
+{
+	"$schema": "https://gobl.org/draft-0/envelope",
+	"head": {
+		"uuid": "01a09025-0134-7583-a807-d51babcbda3d",
+		"dig": {
+			"alg": "sha256",
+			"val": "497cd17fecb588c699b6c8eb54030a4a16f31a72fa976577d526cfee15035956"
+		}
+	},
+	"doc": {
+		"$schema": "https://gobl.org/draft-0/bill/invoice",
+		"$regime": "IT",
+		"$addons": [
+			"it-sdi-v1"
+		],
+		"uuid": "019891f4-3d2c-73a1-b8fe-4f5c1a8e2b85",
+		"type": "standard",
+		"series": "SAMPLE",
+		"code": "011",
+		"issue_date": "2026-09-06",
+		"currency": "EUR",
+		"tax": {
+			"rounding": "currency",
+			"ext": {
+				"it-sdi-document-type": "TD01",
+				"it-sdi-format": "FPR12"
+			}
+		},
+		"supplier": {
+			"name": "Rossi Digital Services",
+			"tax_id": {
+				"country": "IT",
+				"code": "12345678903"
+			},
+			"addresses": [
+				{
+					"num": "1",
+					"street": "VIALE DELLA LIBERTÀ",
+					"locality": "ROMA",
+					"region": "RM",
+					"code": "00100",
+					"country": "IT"
+				}
+			],
+			"emails": [
+				{
+					"addr": "billing@example.com"
+				}
+			],
+			"ext": {
+				"it-sdi-fiscal-regime": "RF01"
+			}
+		},
+		"customer": {
+			"name": "MARIO LEONI",
+			"tax_id": {
+				"country": "IT"
+			},
+			"identities": [
+				{
+					"key": "it-fiscal-code",
+					"code": "MRALNE80E05H501C"
+				}
+			],
+			"people": [
+				{
+					"name": {
+						"prefix": "Dott.",
+						"given": "MARIO",
+						"surname": "LEONI"
+					}
+				}
+			],
+			"inboxes": [
+				{
+					"key": "it-sdi-code",
+					"code": "ABCDEF1"
+				}
+			],
+			"addresses": [
+				{
+					"num": "32",
+					"street": "VIALE DELI LAVORATORI",
+					"locality": "FIRENZE",
+					"region": "FI",
+					"code": "50100",
+					"country": "IT"
+				}
+			]
+		},
+		"lines": [
+			{
+				"i": 1,
+				"quantity": "1.00",
+				"item": {
+					"name": "Agency commission - property one",
+					"price": "945.00"
+				},
+				"sum": "945.00",
+				"taxes": [
+					{
+						"cat": "VAT",
+						"key": "standard",
+						"percent": "22.0%"
+					},
+					{
+						"cat": "IRES",
+						"percent": "11.5%",
+						"ext": {
+							"it-sdi-retained": "A",
+							"it-sdi-retained-rate": "23.00"
+						}
+					}
+				],
+				"total": "945.00"
+			},
+			{
+				"i": 2,
+				"quantity": "1.00",
+				"item": {
+					"name": "Agency commission - property two",
+					"price": "1350.00"
+				},
+				"sum": "1350.00",
+				"taxes": [
+					{
+						"cat": "VAT",
+						"key": "standard",
+						"percent": "22.0%"
+					},
+					{
+						"cat": "IRES",
+						"percent": "11.5%",
+						"ext": {
+							"it-sdi-retained": "A",
+							"it-sdi-retained-rate": "23.00"
+						}
+					}
+				],
+				"total": "1350.00"
+			}
+		],
+		"totals": {
+			"sum": "2295.00",
+			"total": "2295.00",
+			"taxes": {
+				"categories": [
+					{
+						"code": "VAT",
+						"rates": [
+							{
+								"key": "standard",
+								"base": "2295.00",
+								"percent": "22.0%",
+								"amount": "504.90"
+							}
+						],
+						"amount": "504.90"
+					},
+					{
+						"code": "IRES",
+						"retained": true,
+						"rates": [
+							{
+								"ext": {
+									"it-sdi-retained": "A",
+									"it-sdi-retained-rate": "23.00"
+								},
+								"base": "2295.00",
+								"percent": "11.5%",
+								"amount": "263.93"
+							}
+						],
+						"amount": "263.93"
+					}
+				],
+				"sum": "504.90",
+				"retained": "263.93"
+			},
+			"tax": "504.90",
+			"total_with_tax": "2799.90",
+			"retained_tax": "263.93",
+			"payable": "2535.97"
+		}
+	}
+}

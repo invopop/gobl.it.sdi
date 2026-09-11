@@ -697,6 +697,55 @@ func TestRetainedTaxesValidation(t *testing.T) {
 	})
 	require.NoError(t, inv.Calculate())
 	require.NoError(t, rules.Validate(inv))
+
+	// 23% withheld on half the line: the effective 11.50% is the percent and
+	// the statutory rate goes in the extension.
+	withStatutoryRate := func(t *testing.T, rate cbc.Code, percent *num.Percentage) *bill.Invoice {
+		inv := testInvoiceStandard(t)
+		inv.Lines[0].Taxes = append(inv.Lines[0].Taxes, &tax.Combo{
+			Category: "IRES",
+			Ext: tax.ExtensionsOf(cbc.CodeMap{
+				sdi.ExtKeyRetained:     "A",
+				sdi.ExtKeyRetainedRate: rate,
+			}),
+			Percent: percent,
+		})
+		require.NoError(t, inv.Calculate())
+		return inv
+	}
+
+	t.Run("statutory rate on a reduced base", func(t *testing.T) {
+		inv := withStatutoryRate(t, "23.00", num.NewPercentage(1150, 4))
+		require.NoError(t, rules.Validate(inv))
+	})
+
+	t.Run("statutory rate without two decimals", func(t *testing.T) {
+		inv := withStatutoryRate(t, "23", num.NewPercentage(1150, 4))
+		err := rules.Validate(inv)
+		require.ErrorContains(t, err, "GOBL-IT-SDI-TAX-COMBO-03")
+		assert.ErrorContains(t, err, fmt.Sprintf("retained tax combo '%s' extension must be a percentage between 0.00 and 100.00 with two decimals", sdi.ExtKeyRetainedRate))
+	})
+
+	t.Run("statutory rate not above the percent", func(t *testing.T) {
+		inv := withStatutoryRate(t, "23.00", num.NewPercentage(23, 2))
+		err := rules.Validate(inv)
+		require.ErrorContains(t, err, "GOBL-IT-SDI-TAX-COMBO-04")
+		assert.ErrorContains(t, err, fmt.Sprintf("retained tax combo '%s' extension must be greater than the percent", sdi.ExtKeyRetainedRate))
+	})
+
+	t.Run("statutory rate without a percent", func(t *testing.T) {
+		inv := withStatutoryRate(t, "23.00", nil)
+		require.ErrorContains(t, rules.Validate(inv), "GOBL-IT-SDI-TAX-COMBO-04")
+	})
+
+	t.Run("statutory rate on a VAT combo", func(t *testing.T) {
+		inv := testInvoiceStandard(t)
+		inv.Lines[0].Taxes[0].Ext = inv.Lines[0].Taxes[0].Ext.Set(sdi.ExtKeyRetainedRate, "23.00")
+		require.NoError(t, inv.Calculate())
+		err := rules.Validate(inv)
+		require.ErrorContains(t, err, "GOBL-IT-SDI-TAX-COMBO-05")
+		assert.ErrorContains(t, err, fmt.Sprintf("'%s' extension is only for retained taxes", sdi.ExtKeyRetainedRate))
+	})
 }
 
 func TestInvoiceLineValidation(t *testing.T) {

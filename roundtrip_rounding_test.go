@@ -2,6 +2,8 @@ package fatturapa_test
 
 import (
 	"encoding/xml"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/invopop/gobl"
@@ -72,4 +74,25 @@ func TestRoundTripPreservesPayable(t *testing.T) {
 	require.True(t, ok)
 
 	assert.Equal(t, "7.43", imported.Totals.Payable.String())
+}
+
+// TestRoundTripPreservesRetainedRate checks that a withholding declared on a
+// reduced base comes back out with the issuer's statutory rate.
+func TestRoundTripPreservesRetainedRate(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join(test.GetDataPath(test.PathFatturaPAGOBL), "invoice-retained-reduced-base.xml"))
+	require.NoError(t, err)
+
+	env, err := test.ConvertToGOBL(data)
+	require.NoError(t, err)
+
+	doc, err := test.ConvertFromGOBL(env, test.LoadOptions()...)
+	require.NoError(t, err)
+
+	dr := doc.Body[0].GeneralData.Document.RetainedTaxes
+	require.Len(t, dr, 1)
+	assert.Equal(t, "RT02", dr[0].Type)
+	assert.Equal(t, "263.93", dr[0].Amount)
+	assert.Equal(t, "23.00", dr[0].Rate)
+	assert.Equal(t, "A", dr[0].Reason)
+	assert.Equal(t, "2535.97", doc.Body[0].GeneralData.Document.TotalAmount)
 }

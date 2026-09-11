@@ -53,6 +53,9 @@ func findRetainedCategories(totals *bill.Totals) []*tax.CategoryTotal {
 
 func newRetainedTax(cat cbc.Code, rateTotal *tax.RateTotal) (*RetainedTax, error) {
 	rate := formatPercentage(rateTotal.Percent)
+	if v := rateTotal.Ext.Get(sdi.ExtKeyRetainedRate); v != "" {
+		rate = v.String()
+	}
 	amount := formatAmount2(&rateTotal.Amount)
 
 	codeTR, err := findCodeTaxType(cat)

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/invopop/gobl/cbc"
+	"github.com/invopop/gobl/num"
 	"github.com/invopop/gobl/regimes/it"
 	"github.com/invopop/gobl/tax"
 	"github.com/stretchr/testify/assert"
@@ -88,4 +89,43 @@ func TestRetainedTaxTypesRoundTrip(t *testing.T) {
 			assert.Equal(t, def.Code, cat, "%s is mapped by more than one category", code)
 		})
 	}
+}
+
+func TestEffectiveRate(t *testing.T) {
+	tests := []struct {
+		name   string
+		amount string
+		base   string
+		want   string
+	}{
+		{"exact at two decimals", "263.93", "2295.00", "11.50%"},
+		// 12.01 / 120.00 = 10.0083..%: the quotient rounds up to the
+		// candidate that reproduces the amount.
+		{"rounds the quotient to the nearest candidate", "12.01", "120.00", "10.01%"},
+		{"exact at three decimals", "123.45", "1000.00", "12.345%"},
+		{"exact at four decimals", "768.92", "6686.21", "11.5001%"},
+		{"declared rate reproduces", "200.00", "1000.00", "20.00%"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			amount, err := num.AmountFromString(tt.amount)
+			require.NoError(t, err)
+			base, err := num.AmountFromString(tt.base)
+			require.NoError(t, err)
+
+			p := effectiveRate(amount, base)
+			require.NotNil(t, p)
+			assert.Equal(t, tt.want, p.String())
+			assert.True(t, p.Of(base).Equals(amount))
+		})
+	}
+
+	t.Run("returns nil for a zero base", func(t *testing.T) {
+		assert.Nil(t, effectiveRate(num.MakeAmount(100, 2), num.MakeAmount(0, 2)))
+	})
+
+	t.Run("returns nil beyond the precision bound", func(t *testing.T) {
+		// 0.01 on 10,000,000.00 needs a seven-decimal rate.
+		assert.Nil(t, effectiveRate(num.MakeAmount(1, 2), num.MakeAmount(1000000000, 2)))
+	})
 }

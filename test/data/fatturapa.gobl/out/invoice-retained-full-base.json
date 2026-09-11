@@ -3,23 +3,20 @@
 	"$addons": [
 		"it-sdi-v1"
 	],
-	"$tags": [
-		"freelance"
-	],
 	"uuid": "00000000-0000-0000-0000-000000000000",
 	"type": "standard",
-	"code": "SAMPLE-004",
-	"issue_date": "2023-03-02",
+	"code": "SAMPLE-012",
+	"issue_date": "2026-09-06",
 	"currency": "EUR",
 	"tax": {
 		"rounding": "currency",
 		"ext": {
-			"it-sdi-document-type": "TD06",
+			"it-sdi-document-type": "TD01",
 			"it-sdi-format": "FPR12"
 		}
 	},
 	"supplier": {
-		"name": "Studio Bianchi",
+		"name": "Rossi Digital Services",
 		"tax_id": {
 			"country": "IT",
 			"code": "12345678903"
@@ -34,16 +31,35 @@
 				"country": "IT"
 			}
 		],
+		"emails": [
+			{
+				"addr": "billing@example.com"
+			}
+		],
 		"ext": {
 			"it-sdi-fiscal-regime": "RF01"
 		}
 	},
 	"customer": {
-		"name": "Impresa Verdi SRL",
+		"name": "MARIO LEONI",
 		"tax_id": {
-			"country": "IT",
-			"code": "13029381004"
+			"country": "IT"
 		},
+		"identities": [
+			{
+				"key": "it-fiscal-code",
+				"code": "MRALNE80E05H501C"
+			}
+		],
+		"people": [
+			{
+				"name": {
+					"prefix": "Dott.",
+					"given": "MARIO",
+					"surname": "LEONI"
+				}
+			}
+		],
 		"inboxes": [
 			{
 				"key": "it-sdi-code",
@@ -66,7 +82,7 @@
 			"i": 1,
 			"quantity": "1.00",
 			"item": {
-				"name": "Consulenza tecnica",
+				"name": "Consulting services",
 				"price": "1000.00"
 			},
 			"sum": "1000.00",
@@ -82,34 +98,11 @@
 					"ext": {
 						"it-sdi-retained": "A"
 					}
-				},
-				{
-					"cat": "CP",
-					"percent": "4.00%",
-					"ext": {
-						"it-sdi-retained": "A"
-					}
 				}
 			],
 			"total": "1000.00"
 		}
 	],
-	"payment": {
-		"terms": {
-			"key": "pending"
-		},
-		"instructions": {
-			"key": "credit-transfer",
-			"credit_transfer": [
-				{
-					"iban": "IT60X0542811101000000123456"
-				}
-			],
-			"ext": {
-				"it-sdi-payment-means": "MP05"
-			}
-		}
-	},
 	"totals": {
 		"sum": "1000.00",
 		"total": "1000.00",
@@ -141,29 +134,14 @@
 						}
 					],
 					"amount": "200.00"
-				},
-				{
-					"code": "CP",
-					"retained": true,
-					"rates": [
-						{
-							"ext": {
-								"it-sdi-retained": "A"
-							},
-							"base": "1000.00",
-							"percent": "4.00%",
-							"amount": "40.00"
-						}
-					],
-					"amount": "40.00"
 				}
 			],
 			"sum": "220.00",
-			"retained": "240.00"
+			"retained": "200.00"
 		},
 		"tax": "220.00",
 		"total_with_tax": "1220.00",
-		"retained_tax": "240.00",
-		"payable": "980.00"
+		"retained_tax": "200.00",
+		"payable": "1020.00"
 	}
 }

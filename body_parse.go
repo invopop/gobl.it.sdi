@@ -1,6 +1,8 @@
 package fatturapa
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -86,10 +88,75 @@ func goblBillInvoiceAddBody(inv *bill.Invoice, body *Body) error {
 		return fmt.Errorf("adding goods and services: %w", err)
 	}
 
+	if len(retainedTaxes) > 0 {
+		if err := roundToCurrencyWhenNeutral(inv); err != nil {
+			return fmt.Errorf("rounding withheld invoice: %w", err)
+		}
+	}
+
 	// Add payment data
 	goblBillInvoiceAddPaymentsData(inv, body.PaymentsData)
 
 	return nil
+}
+
+// roundToCurrencyWhenNeutral switches the invoice to the currency rounding
+// rule when that changes nothing in the totals but the payable. A withholding
+// is stated to the cent and precise rounding would deduct it unrounded,
+// leaving the payable a cent off; but the currency rule also rounds each
+// line and adjustment before summing, which must not move the totals.
+func roundToCurrencyWhenNeutral(inv *bill.Invoice) error {
+	// Calculate rewrites lines and totals in place, so each rule runs on its
+	// own copy.
+	precise, err := calculatedCopy(inv, "")
+	if err != nil {
+		return err
+	}
+	currency, err := calculatedCopy(inv, tax.RoundingRuleCurrency)
+	if err != nil {
+		return err
+	}
+	if precise.Totals == nil || currency.Totals == nil {
+		return nil
+	}
+	precise.Totals.Payable = currency.Totals.Payable
+	pt, err := json.Marshal(precise.Totals)
+	if err != nil {
+		return err
+	}
+	ct, err := json.Marshal(currency.Totals)
+	if err != nil {
+		return err
+	}
+	if !bytes.Equal(pt, ct) {
+		return nil
+	}
+
+	if inv.Tax == nil {
+		inv.Tax = new(bill.Tax)
+	}
+	inv.Tax.Rounding = tax.RoundingRuleCurrency
+	return nil
+}
+
+// calculatedCopy returns a calculated copy of the invoice under the given
+// rounding rule, leaving the original untouched.
+func calculatedCopy(inv *bill.Invoice, rr cbc.Key) (*bill.Invoice, error) {
+	data, err := json.Marshal(inv)
+	if err != nil {
+		return nil, err
+	}
+	cp := new(bill.Invoice)
+	if err := json.Unmarshal(data, cp); err != nil {
+		return nil, err
+	}
+	if rr != "" {
+		if cp.Tax == nil {
+			cp.Tax = new(bill.Tax)
+		}
+		cp.Tax.Rounding = rr
+	}
+	return cp, cp.Calculate()
 }
 
 // goblBillInvoiceAddGeneralData adds general data to the GOBL invoice
@@ -542,8 +609,23 @@ func adjustTotals(inv *bill.Invoice, doc *GeneralDocumentData) error {
 			return nil
 		}
 
+		// ImportoTotaleDocumento may be stated net or gross of a withholding
+		// and SDI accepts both, so take the reading that a stated
+		// Arrotondamento, or else the smaller difference, points to.
+		target := ft
+		if doc.Rounding != "" {
+			arr, err := parseAmount(doc.Rounding)
+			if err != nil {
+				return fmt.Errorf("parsing Arrotondamento: %w", err)
+			}
+			target = ft.Subtract(arr)
+		}
 		r := ft.Subtract(inv.Totals.Payable)
-		if r.Compare(num.AmountZero) != 0 {
+		dn := target.Subtract(inv.Totals.Payable)
+		if dg := target.Subtract(inv.Totals.TotalWithTax); dg.Abs().Compare(dn.Abs()) < 0 {
+			r = ft.Subtract(inv.Totals.TotalWithTax)
+		}
+		if !r.IsZero() {
 			inv.Totals.Rounding = &r
 		}
 	}
