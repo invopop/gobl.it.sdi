@@ -12,6 +12,7 @@
 	"issue_date": "2025-08-21",
 	"currency": "EUR",
 	"tax": {
+		"rounding": "currency",
 		"ext": {
 			"it-sdi-document-type": "TD06",
 			"it-sdi-format": "FPR12"

@@ -186,4 +186,36 @@ func TestBodyInConversion(t *testing.T) {
 		require.Equal(t, "1388.41", inv.Totals.Payable.String())
 
 	})
+
+	t.Run("should accept a document total stated gross of the withholding", func(t *testing.T) {
+		data, err := os.ReadFile(filepath.Join(test.GetDataPath(test.PathFatturaPAGOBL), "invoice-irpef-no-flag.xml"))
+		require.NoError(t, err)
+
+		env, err := test.ConvertToGOBL(data)
+		require.NoError(t, err)
+
+		inv, ok := env.Extract().(*bill.Invoice)
+		require.True(t, ok)
+
+		// ImportoTotaleDocumento is 1395.68, the total with tax.
+		assert.Equal(t, "1395.68", inv.Totals.TotalWithTax.String())
+		assert.Equal(t, "1175.68", inv.Totals.Payable.String())
+		assert.Nil(t, inv.Totals.Rounding)
+	})
+
+	t.Run("should accept a document total stated net of the withholding", func(t *testing.T) {
+		data, err := os.ReadFile(filepath.Join(test.GetDataPath(test.PathFatturaPAGOBL), "invoice-retained-cp.xml"))
+		require.NoError(t, err)
+
+		env, err := test.ConvertToGOBL(data)
+		require.NoError(t, err)
+
+		inv, ok := env.Extract().(*bill.Invoice)
+		require.True(t, ok)
+
+		// ImportoTotaleDocumento is 980.00, the amount left to pay.
+		assert.Equal(t, "1220.00", inv.Totals.TotalWithTax.String())
+		assert.Equal(t, "980.00", inv.Totals.Payable.String())
+		assert.Nil(t, inv.Totals.Rounding)
+	})
 }
