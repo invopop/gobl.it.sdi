@@ -96,7 +96,8 @@
 					"cat": "IRES",
 					"percent": "11.50%",
 					"ext": {
-						"it-sdi-retained": "A"
+						"it-sdi-retained": "A",
+						"it-sdi-retained-rate": "23.00"
 					}
 				}
 			],
@@ -120,7 +121,8 @@
 					"cat": "IRES",
 					"percent": "11.50%",
 					"ext": {
-						"it-sdi-retained": "A"
+						"it-sdi-retained": "A",
+						"it-sdi-retained-rate": "23.00"
 					}
 				}
 			],
@@ -150,7 +152,8 @@
 					"rates": [
 						{
 							"ext": {
-								"it-sdi-retained": "A"
+								"it-sdi-retained": "A",
+								"it-sdi-retained-rate": "23.00"
 							},
 							"base": "2295.00",
 							"percent": "11.50%",

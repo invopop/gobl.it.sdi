@@ -3,6 +3,7 @@ package fatturapa_test
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	sdi "github.com/invopop/gobl.it.sdi/addon"
@@ -165,6 +166,9 @@ func TestRetainedTaxesInConversion(t *testing.T) {
 		require.True(t, ok)
 
 		assert.Equal(t, tax.RoundingRuleCurrency, invoice.Tax.Rounding)
+		for _, tc := range invoice.Lines[0].Taxes {
+			assert.Empty(t, tc.Ext.Get(sdi.ExtKeyRetainedRate), "no rate is derived when the declared one matches")
+		}
 		assert.Equal(t, "1220.00", invoice.Totals.TotalWithTax.String())
 		require.NotNil(t, invoice.Totals.RetainedTax)
 		assert.Equal(t, "200.00", invoice.Totals.RetainedTax.String())
@@ -270,6 +274,22 @@ func TestRetainedTaxOnReducedBase(t *testing.T) {
 		assert.Equal(t, "11.50%", rate.Percent.String())
 		assert.Equal(t, "2295.00", rate.Base.String())
 		assert.Equal(t, cbc.Code("A"), rate.Ext.Get(sdi.ExtKeyRetained))
+		assert.Equal(t, cbc.Code("23.00"), rate.Ext.Get(sdi.ExtKeyRetainedRate), "the declared rate is kept")
+	})
+
+	t.Run("should keep the declared rate with two decimals", func(t *testing.T) {
+		data, err := os.ReadFile(filepath.Join(test.GetDataPath(test.PathFatturaPAGOBL), "invoice-retained-reduced-base.xml"))
+		require.NoError(t, err)
+		xml := strings.Replace(string(data), "<AliquotaRitenuta>23.00</AliquotaRitenuta>", "<AliquotaRitenuta>23</AliquotaRitenuta>", 1)
+		require.NotEqual(t, string(data), xml)
+
+		env, err := test.ConvertToGOBL([]byte(xml))
+		require.NoError(t, err)
+
+		invoice, ok := env.Extract().(*bill.Invoice)
+		require.True(t, ok)
+
+		assert.Equal(t, cbc.Code("23.00"), invoice.Lines[0].Taxes[1].Ext.Get(sdi.ExtKeyRetainedRate))
 	})
 
 	t.Run("should deduct the withholding from the payable amount", func(t *testing.T) {
@@ -311,9 +331,11 @@ func TestRetainedTaxOnReducedBase(t *testing.T) {
 		require.Contains(t, rates, it.TaxCategoryIRES)
 		assert.Equal(t, "11.5001%", rates[it.TaxCategoryIRES].Percent.String())
 		assert.Equal(t, "768.92", rates[it.TaxCategoryIRES].Amount.String())
+		assert.Equal(t, cbc.Code("23.00"), rates[it.TaxCategoryIRES].Ext.Get(sdi.ExtKeyRetainedRate))
 		require.Contains(t, rates, it.TaxCategoryENASARCO)
 		assert.Equal(t, "8.50%", rates[it.TaxCategoryENASARCO].Percent.String())
 		assert.Equal(t, "568.33", rates[it.TaxCategoryENASARCO].Amount.String())
+		assert.Empty(t, rates[it.TaxCategoryENASARCO].Ext.Get(sdi.ExtKeyRetainedRate))
 
 		assert.Equal(t, "8157.18", invoice.Totals.TotalWithTax.String())
 		assert.Equal(t, "6819.93", invoice.Totals.Payable.String())

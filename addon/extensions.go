@@ -14,6 +14,7 @@ const (
 	ExtKeyDocumentType cbc.Key = "it-sdi-document-type"
 	ExtKeyExempt       cbc.Key = "it-sdi-exempt"
 	ExtKeyRetained     cbc.Key = "it-sdi-retained"
+	ExtKeyRetainedRate cbc.Key = "it-sdi-retained-rate"
 	ExtKeyPaymentMeans cbc.Key = "it-sdi-payment-means"
 	ExtKeyVATLiability cbc.Key = "it-sdi-vat-liability"
 	ExtKeyFundType     cbc.Key = "it-sdi-fund-type"
@@ -700,6 +701,36 @@ var extensions = []*cbc.Definition{
 				},
 			},
 		},
+	},
+	{
+		Key: ExtKeyRetainedRate,
+		Name: i18n.String{
+			i18n.EN: "Retained Tax Statutory Rate",
+			i18n.IT: "Aliquota Ritenuta",
+		},
+		Desc: i18n.String{
+			i18n.EN: here.Doc(`
+				Statutory rate of a withholding computed on a reduced taxable base, as
+				printed in AliquotaRitenuta. Italian withholdings often apply to a fraction
+				of the line total, such as the 23% withheld on 50% of an agent's commission
+				(art. 25-bis DPR 600/1973). GOBL has no taxable base per tax, so the combo's
+				percent must be the effective rate over the whole line (11.50% in that
+				example) and this extension keeps the statutory one. Set it when the two
+				differ; ImportoRitenuta is still calculated from the percent, and whether
+				the pair is coherent is up to the issuer.
+			`),
+		},
+		Sources: []*cbc.Source{
+			{
+				Title: i18n.String{
+					i18n.EN: "FatturaPA XSD v1.2.2, RateType",
+					i18n.IT: "Schema XSD FatturaPA v1.2.2, RateType",
+				},
+				URL: "https://www.fatturapa.gov.it/export/documenti/fatturapa/v1.2.2/Schema_del_file_xml_FatturaPA_v1.2.2.xsd",
+			},
+		},
+		// RateType, capped at 100.00 as the XSD does.
+		Pattern: `^([0-9]{1,2}\.[0-9]{2}|100\.00)$`,
 	},
 	{
 		Key: ExtKeyPaymentMeans,

@@ -86,6 +86,9 @@ func processRetainedTaxes(inv *bill.Invoice, lineDetails []*LineDetail, retained
 		if rate == nil {
 			return fmt.Errorf("could not match retained tax: %s %s%% %s on base %s", rt.Type, rt.Rate, rt.Amount, totalBase)
 		}
+		if rate != &rtRate {
+			taxCombo.Ext = taxCombo.Ext.Set(sdi.ExtKeyRetainedRate, cbc.Code(formatPercentage(&rtRate)))
+		}
 
 		taxCombo.Percent = rate
 		for _, line := range candidates {

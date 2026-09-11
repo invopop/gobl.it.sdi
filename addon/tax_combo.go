@@ -100,9 +100,46 @@ func taxComboRules() *rules.Set {
 					fmt.Sprintf("retained tax combo requires '%s' extension", ExtKeyRetained),
 					tax.ExtensionsRequire(ExtKeyRetained),
 				),
+				rules.Assert("03",
+					fmt.Sprintf("retained tax combo '%s' extension must be a percentage between 0.00 and 100.00 with two decimals", ExtKeyRetainedRate),
+					tax.ExtensionHasValidCode(ExtKeyRetainedRate),
+				),
+			),
+			rules.Assert("04",
+				fmt.Sprintf("retained tax combo '%s' extension must be greater than the percent", ExtKeyRetainedRate),
+				is.Func("statutory rate exceeds the percent", taxComboRetainedRateExceedsPercent),
+			),
+		),
+		rules.When(is.Not(is.Func("is retained tax", taxComboIsRetained)),
+			rules.Field("ext",
+				rules.Assert("05",
+					fmt.Sprintf("'%s' extension is only for retained taxes", ExtKeyRetainedRate),
+					tax.ExtensionsExclude(ExtKeyRetainedRate),
+				),
 			),
 		),
 	)
+}
+
+// taxComboRetainedRateExceedsPercent passes when the statutory rate in the
+// extension is above the effective percent, or when the extension is absent.
+func taxComboRetainedRateExceedsPercent(val any) bool {
+	c, ok := val.(*tax.Combo)
+	if !ok || c == nil {
+		return true
+	}
+	v := c.Ext.Get(ExtKeyRetainedRate)
+	if v == "" {
+		return true
+	}
+	if c.Percent == nil {
+		return false
+	}
+	p, err := num.PercentageFromString(v.String() + "%")
+	if err != nil {
+		return true // the format rule reports it
+	}
+	return p.Compare(*c.Percent) > 0
 }
 
 func taxComboIsVATWithoutPercent(val any) bool {
