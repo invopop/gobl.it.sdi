@@ -56,9 +56,7 @@ func processRetainedTaxes(inv *bill.Invoice, lineDetails []*LineDetail, retained
 		// Try to match against a single line first (common case)
 		matched := false
 		for _, line := range candidates {
-			expectedAmount := rtRate.Of(*line.Total)
-
-			if expectedAmount.Equals(rtAmount) {
+			if reproduces(rtRate, *line.Total, rtAmount) {
 				line.Taxes = append(line.Taxes, taxCombo)
 				matched = true
 				break
@@ -72,33 +70,62 @@ func processRetainedTaxes(inv *bill.Invoice, lineDetails []*LineDetail, retained
 		// Try matching against the sum of all candidate lines + fund contribution charges
 		totalBase := num.MakeAmount(0, 2)
 		for _, line := range candidates {
-			totalBase = totalBase.Add(*line.Total)
+			totalBase = totalBase.MatchPrecision(*line.Total).Add(*line.Total)
 		}
 		for _, charge := range retainedCharges {
-			totalBase = totalBase.Add(charge.Amount)
+			totalBase = totalBase.MatchPrecision(charge.Amount).Add(charge.Amount)
 		}
 
-		expectedTotal := rtRate.Of(totalBase)
-		if expectedTotal.Equals(rtAmount) {
-			for _, line := range candidates {
-				tc := *taxCombo
-				tc.Ext = copyExtensions(taxCombo.Ext)
-				line.Taxes = append(line.Taxes, &tc)
-			}
-			for _, charge := range retainedCharges {
-				tc := *taxCombo
-				tc.Ext = copyExtensions(taxCombo.Ext)
-				charge.Taxes = append(charge.Taxes, &tc)
-			}
-			matched = true
+		rate := &rtRate
+		if !reproduces(rtRate, totalBase, rtAmount) {
+			// The withholding applies to a fraction of the base (art. 25-bis:
+			// 23% on half a commission) and FatturaPA has no element for it,
+			// so derive the rate over the whole base.
+			rate = effectiveRate(rtAmount, totalBase)
+		}
+		if rate == nil {
+			return fmt.Errorf("could not match retained tax: %s %s%% %s on base %s", rt.Type, rt.Rate, rt.Amount, totalBase)
 		}
 
-		if !matched {
-			return fmt.Errorf("could not match retained tax: %s %s%% %s", rt.Type, rt.Rate, rt.Amount)
+		taxCombo.Percent = rate
+		for _, line := range candidates {
+			tc := *taxCombo
+			tc.Ext = copyExtensions(taxCombo.Ext)
+			line.Taxes = append(line.Taxes, &tc)
+		}
+		for _, charge := range retainedCharges {
+			tc := *taxCombo
+			tc.Ext = copyExtensions(taxCombo.Ext)
+			charge.Taxes = append(charge.Taxes, &tc)
 		}
 	}
 
 	return nil
+}
+
+// maxRetainedRateExp caps the decimal places tried when deriving a rate.
+const maxRetainedRateExp = 6
+
+// effectiveRate returns the percentage with the fewest decimals that yields
+// amount from base, or nil when none exists within the bound.
+func effectiveRate(amount, base num.Amount) *num.Percentage {
+	if base.IsZero() {
+		return nil
+	}
+	hundred := num.MakeAmount(100, 0)
+	for exp := uint32(2); exp <= maxRetainedRateExp; exp++ {
+		p := num.PercentageFromAmount(amount.Multiply(hundred).RescaleUp(exp).Divide(base))
+		if reproduces(p, base, amount) {
+			return &p
+		}
+	}
+	return nil
+}
+
+// reproduces reports whether rate applied to base gives amount once rounded
+// to the amount's precision.
+func reproduces(rate num.Percentage, base, amount num.Amount) bool {
+	return rate.Of(base).Rescale(amount.Exp()).Equals(amount)
 }
 
 // candidateLinesForRetention returns the lines that should be considered

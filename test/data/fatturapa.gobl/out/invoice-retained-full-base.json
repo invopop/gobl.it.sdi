@@ -1,0 +1,147 @@
+{
+	"$regime": "IT",
+	"$addons": [
+		"it-sdi-v1"
+	],
+	"uuid": "00000000-0000-0000-0000-000000000000",
+	"type": "standard",
+	"code": "SAMPLE-012",
+	"issue_date": "2026-09-06",
+	"currency": "EUR",
+	"tax": {
+		"rounding": "currency",
+		"ext": {
+			"it-sdi-document-type": "TD01",
+			"it-sdi-format": "FPR12"
+		}
+	},
+	"supplier": {
+		"name": "Rossi Digital Services",
+		"tax_id": {
+			"country": "IT",
+			"code": "12345678903"
+		},
+		"addresses": [
+			{
+				"num": "1",
+				"street": "VIALE DELLA LIBERTÀ",
+				"locality": "ROMA",
+				"region": "RM",
+				"code": "00100",
+				"country": "IT"
+			}
+		],
+		"emails": [
+			{
+				"addr": "billing@example.com"
+			}
+		],
+		"ext": {
+			"it-sdi-fiscal-regime": "RF01"
+		}
+	},
+	"customer": {
+		"name": "MARIO LEONI",
+		"tax_id": {
+			"country": "IT"
+		},
+		"identities": [
+			{
+				"key": "it-fiscal-code",
+				"code": "MRALNE80E05H501C"
+			}
+		],
+		"people": [
+			{
+				"name": {
+					"prefix": "Dott.",
+					"given": "MARIO",
+					"surname": "LEONI"
+				}
+			}
+		],
+		"inboxes": [
+			{
+				"key": "it-sdi-code",
+				"code": "ABCDEF1"
+			}
+		],
+		"addresses": [
+			{
+				"num": "32",
+				"street": "VIALE DELI LAVORATORI",
+				"locality": "FIRENZE",
+				"region": "FI",
+				"code": "50100",
+				"country": "IT"
+			}
+		]
+	},
+	"lines": [
+		{
+			"i": 1,
+			"quantity": "1.00",
+			"item": {
+				"name": "Consulting services",
+				"price": "1000.00"
+			},
+			"sum": "1000.00",
+			"taxes": [
+				{
+					"cat": "VAT",
+					"key": "standard",
+					"percent": "22.00%"
+				},
+				{
+					"cat": "IRPEF",
+					"percent": "20.00%",
+					"ext": {
+						"it-sdi-retained": "A"
+					}
+				}
+			],
+			"total": "1000.00"
+		}
+	],
+	"totals": {
+		"sum": "1000.00",
+		"total": "1000.00",
+		"taxes": {
+			"categories": [
+				{
+					"code": "VAT",
+					"rates": [
+						{
+							"key": "standard",
+							"base": "1000.00",
+							"percent": "22.00%",
+							"amount": "220.00"
+						}
+					],
+					"amount": "220.00"
+				},
+				{
+					"code": "IRPEF",
+					"retained": true,
+					"rates": [
+						{
+							"ext": {
+								"it-sdi-retained": "A"
+							},
+							"base": "1000.00",
+							"percent": "20.00%",
+							"amount": "200.00"
+						}
+					],
+					"amount": "200.00"
+				}
+			],
+			"sum": "220.00",
+			"retained": "200.00"
+		},
+		"tax": "220.00",
+		"total_with_tax": "1220.00",
+		"retained_tax": "200.00",
+		"payable": "1020.00"
+	}
+}
