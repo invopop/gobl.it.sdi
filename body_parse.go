@@ -107,12 +107,14 @@ func goblBillInvoiceAddGeneralData(inv *bill.Invoice, generalData *GeneralData) 
 	inv.Preceding = goblOrgDocumentRefsFromDocumentRefs(generalData.Preceding)
 
 	// Create a new ordering object and populate it with document references
-	ordering := &bill.Ordering{
-		Purchases: goblOrgDocumentRefsFromDocumentRefs(generalData.Purchases),
-		Contracts: goblOrgDocumentRefsFromDocumentRefs(generalData.Contracts),
-		Tender:    goblOrgDocumentRefsFromDocumentRefs(generalData.Tender),
-		Receiving: goblOrgDocumentRefsFromDocumentRefs(generalData.Receiving),
+	ordering := inv.Ordering
+	if ordering == nil {
+		ordering = new(bill.Ordering)
 	}
+	ordering.Purchases = goblOrgDocumentRefsFromDocumentRefs(generalData.Purchases)
+	ordering.Contracts = goblOrgDocumentRefsFromDocumentRefs(generalData.Contracts)
+	ordering.Tender = goblOrgDocumentRefsFromDocumentRefs(generalData.Tender)
+	ordering.Receiving = goblOrgDocumentRefsFromDocumentRefs(generalData.Receiving)
 
 	// Add despatch document reference if present
 	if len(generalData.Despatch) > 0 {
