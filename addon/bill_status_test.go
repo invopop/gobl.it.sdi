@@ -135,3 +135,46 @@ func TestNormalizeStatusFailedDeliveryFormat(t *testing.T) {
 		assert.NoError(t, rules.Validate(st, tax.AddonContext(sdi.V1)))
 	})
 }
+
+func TestNormalizeStatusReasonKeys(t *testing.T) {
+	status := func(code cbc.Code, reasons ...*bill.Reason) *bill.Status {
+		st := &bill.Status{
+			Addons:   tax.WithAddons(sdi.V1),
+			Supplier: &org.Party{Name: "Test Supplier"},
+			Lines: []*bill.StatusLine{{
+				Ext:     tax.ExtensionsOf(cbc.CodeMap{sdi.ExtKeyNotification: code, sdi.ExtKeyFormat: "FPR12"}),
+				Reasons: reasons,
+			}},
+		}
+		norm.Normalize(st, tax.AddonContext(sdi.V1))
+		return st
+	}
+
+	t.Run("should key each code's explanation", func(t *testing.T) {
+		for code, want := range map[cbc.Code]cbc.Key{
+			"NS":   bill.ReasonKeyLegal,
+			"MC":   bill.ReasonKeyDelivery,
+			"AT":   bill.ReasonKeyDelivery,
+			"EC02": bill.ReasonKeyOther,
+		} {
+			st := status(code, &bill.Reason{Description: "why"})
+			assert.Equal(t, want, st.Lines[0].Reasons[0].Key, string(code))
+		}
+	})
+
+	t.Run("should key every explanation on the line", func(t *testing.T) {
+		st := status("NS", &bill.Reason{Description: "first"}, &bill.Reason{Description: "second"})
+		assert.Equal(t, bill.ReasonKeyLegal, st.Lines[0].Reasons[0].Key)
+		assert.Equal(t, bill.ReasonKeyLegal, st.Lines[0].Reasons[1].Key)
+	})
+
+	t.Run("should leave a key the caller already chose", func(t *testing.T) {
+		st := status("NS", &bill.Reason{Key: bill.ReasonKeyQuality, Description: "why"})
+		assert.Equal(t, bill.ReasonKeyQuality, st.Lines[0].Reasons[0].Key)
+	})
+
+	t.Run("should leave codes that carry no explanation", func(t *testing.T) {
+		st := status("RC", &bill.Reason{Description: "why"})
+		assert.Equal(t, cbc.KeyEmpty, st.Lines[0].Reasons[0].Key)
+	})
+}

@@ -50,9 +50,27 @@ var statusTypes = map[cbc.Code]cbc.Key{
 	"EC02": bill.StatusTypeResponse,
 }
 
+// reasonKeys maps each notification code to the kind of explanation it
+// carries: NS the validation faults SDI found, MC and AT why delivery could
+// not be completed, EC02 the buyer's own grounds for refusing. The text comes
+// from the notification itself, so only the key is set here.
+var reasonKeys = map[cbc.Code]cbc.Key{
+	"NS":   bill.ReasonKeyLegal,
+	"MC":   bill.ReasonKeyDelivery,
+	"AT":   bill.ReasonKeyDelivery,
+	"EC02": bill.ReasonKeyOther,
+}
+
 func normalizeStatusLine(line *bill.StatusLine) {
 	if line == nil {
 		return
+	}
+	if key, ok := reasonKeys[line.Ext.Get(ExtKeyNotification)]; ok {
+		for _, r := range line.Reasons {
+			if r != nil && r.Key == cbc.KeyEmpty {
+				r.Key = key
+			}
+		}
 	}
 	switch line.Ext.Get(ExtKeyNotification) {
 	case "RC":
