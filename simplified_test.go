@@ -8,8 +8,10 @@ import (
 	sdi "github.com/invopop/gobl.it.sdi/addon"
 	"github.com/invopop/gobl.it.sdi/test"
 	"github.com/invopop/gobl/bill"
+	"github.com/invopop/gobl/cbc"
 	"github.com/invopop/gobl/num"
 	"github.com/invopop/gobl/org"
+	"github.com/invopop/gobl/tax"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -222,5 +224,39 @@ func TestSimplifiedCustomer(t *testing.T) {
 		c := doc.Header.Customer
 		assert.Equal(t, "US", c.FiscalIdentifiers.TaxID.Country)
 		assert.Equal(t, "00000", c.OtherIdentifiers.Address.Code)
+	})
+}
+
+func TestSimplifiedIssuerType(t *testing.T) {
+	t.Run("is written to the header and parsed back", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simplified.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Tax = inv.Tax.MergeExtensions(tax.ExtensionsOf(cbc.CodeMap{
+				sdi.ExtKeyIssuerType: sdi.ExtCodeIssuerTypeThirdParty,
+			}))
+		})
+
+		doc, err := fatturapa.ConvertSimplifiedInvoice(env, test.LoadOptions()...)
+		require.NoError(t, err)
+		assert.Equal(t, "TZ", doc.Header.IssuerType)
+
+		data, err := fatturapa.Bytes(doc)
+		require.NoError(t, err)
+		schema, err := test.LoadSimplifiedSchema()
+		require.NoError(t, err)
+		assert.Empty(t, test.ValidateXML(schema, data))
+
+		parsed, err := fatturapa.Parse(data)
+		require.NoError(t, err)
+		inv, ok := parsed.Extract().(*bill.Invoice)
+		require.True(t, ok)
+		assert.Equal(t, sdi.ExtCodeIssuerTypeThirdParty, inv.Tax.Ext.Get(sdi.ExtKeyIssuerType))
+	})
+
+	t.Run("is omitted when the supplier issues", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simplified.json", test.PathGOBLFatturaPA)
+
+		doc := convertSimplified(t, env)
+		assert.Empty(t, doc.Header.IssuerType)
 	})
 }

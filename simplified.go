@@ -36,6 +36,8 @@ type SimplifiedHeader struct {
 	TransmissionData *TransmissionData   `xml:"DatiTrasmissione"`
 	Supplier         *SimplifiedSupplier `xml:"CedentePrestatore"`
 	Customer         *SimplifiedCustomer `xml:"CessionarioCommittente"`
+	// IssuerType says who issued the invoice: CC (customer) or TZ (third party)
+	IssuerType string `xml:"SoggettoEmittente,omitempty"`
 }
 
 // SimplifiedSupplier describes the seller/provider of a simplified invoice.
@@ -106,6 +108,7 @@ func newSimplifiedInvoice(env *gobl.Envelope, inv *bill.Invoice, config *config)
 			TransmissionData: newTransmissionData(inv, env, config.Transmitter),
 			Supplier:         supplier,
 			Customer:         newSimplifiedCustomer(inv.Customer),
+			IssuerType:       inv.Tax.GetExt(sdi.ExtKeyIssuerType).String(),
 		},
 		Body: []*SimplifiedBody{body},
 	}

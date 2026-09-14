@@ -43,6 +43,12 @@ func parseSimplified(doc []byte) (*gobl.Envelope, error) {
 		return nil, err
 	}
 
+	if d.Header.IssuerType != "" {
+		inv.Tax = inv.Tax.MergeExtensions(tax.ExtensionsOf(cbc.CodeMap{
+			sdi.ExtKeyIssuerType: cbc.Code(d.Header.IssuerType),
+		}))
+	}
+
 	return gobl.Envelop(inv)
 }
 
