@@ -45,6 +45,54 @@ func goblOrgPartyFromCustomer(customer *Customer) *org.Party {
 	return party
 }
 
+// goblOrgPartyFromThirdPartyIssuer differs from the customer mapping in that
+// no default Italian tax ID is assumed: the block may identify the party by
+// fiscal code alone.
+func goblOrgPartyFromThirdPartyIssuer(tpi *ThirdPartyIssuer) *org.Party {
+	if tpi == nil || tpi.Identity == nil {
+		return nil
+	}
+
+	identity := tpi.Identity
+	party := new(org.Party)
+
+	if identity.TaxID != nil {
+		party.TaxID = &tax.Identity{
+			Country: l10n.TaxCountryCode(identity.TaxID.Country),
+		}
+		if identity.TaxID.Code != "" && identity.TaxID.Code != "0000000" {
+			party.TaxID.Code = cbc.Code(identity.TaxID.Code)
+		}
+	}
+
+	if identity.FiscalCode != "" {
+		party.Identities = []*org.Identity{
+			{
+				Key:  it.IdentityKeyFiscalCode,
+				Code: cbc.Code(identity.FiscalCode),
+			},
+		}
+	}
+
+	if identity.Profile != nil {
+		party.Name = identity.Profile.Name
+		if identity.Profile.Given != "" {
+			party.Name = identity.Profile.Given + " " + identity.Profile.Surname
+			party.People = []*org.Person{
+				{
+					Name: &org.Name{
+						Given:   identity.Profile.Given,
+						Surname: identity.Profile.Surname,
+						Prefix:  identity.Profile.Title,
+					},
+				},
+			}
+		}
+	}
+
+	return party
+}
+
 func goblOrgPartyAddIdentity(party *org.Party, identity *Identity) {
 	if party == nil || identity == nil {
 		return
