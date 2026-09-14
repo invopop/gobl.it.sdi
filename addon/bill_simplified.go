@@ -364,9 +364,9 @@ func invoiceSupplierIsNotCustomer(val any) bool {
 	return true
 }
 
-// partyFiscalIDs lists the VAT ID and fiscal codes that identify a party in the
-// FSM10 header. An Italian VAT number also counts as a fiscal code, because a
-// company's codice fiscale is its partita IVA.
+// partyFiscalIDs lists the VAT ID and fiscal codes that identify a party. An
+// Italian VAT number also counts as a fiscal code, because a company's codice
+// fiscale is its partita IVA.
 func partyFiscalIDs(p *org.Party) []string {
 	var ids []string
 	if p.TaxID != nil && p.TaxID.Code != cbc.CodeEmpty {
