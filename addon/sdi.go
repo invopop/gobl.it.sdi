@@ -64,23 +64,40 @@ func newAddon() *tax.AddonDef {
 		Description: i18n.String{
 			i18n.EN: here.Doc(`
 				Italy exchanges electronic invoices in the FatturaPA XML format through the tax
-				authority's Sistema di Interscambio (SDI). This addon ensures GOBL documents carry
-				the fields and extensions needed to produce valid FatturaPA files with
+				authority's Sistema di Interscambio (SDI). This addon ensures a GOBL document has
+				the fields and extensions needed to produce a valid FatturaPA file with
 				[gobl.fatturapa](https://github.com/invopop/gobl.it.sdi).
 
 				## Customer identification
 
-				An Italian customer is identified by a partita IVA (VAT number, in the party's
-				~tax_id~) or a codice fiscale (an identity with the key ~it-fiscal-code~), and
-				routed by a codice destinatario (~it-sdi-code~ inbox) or a PEC address
-				(~it-sdi-pec~ inbox). A customer outside Italy needs only the country in ~tax_id~.
+				Every customer needs a ~tax_id~, and what you put in it depends on who they are. For
+				an Italian business, use their partita IVA (VAT number). An Italian private
+				individual has no VAT number, so give the country alone and put their codice
+				fiscale in an identity with the key ~it-fiscal-code~. For a customer outside Italy,
+				give the country, and their VAT number if they have one.
 
-				Where a party has no code of its own, FatturaPA expects a placeholder rather than
-				an empty field, and the conversion supplies it: ~0000000~ for a customer with no
-				tax code, or an Italian customer with no inbox; ~XXXXXXX~ as the recipient code for
-				a customer outside Italy; and ~OO99999999999~ in place of a non-EU business's own
-				tax number, since only EU VAT numbers are meaningful to SDI. Leave the field out
-				rather than writing these values yourself.
+				In your GOBL document you can declare two kinds of inbox to tell SDI where the
+				invoice should be delivered: ~it-sdi-code~ for a codice destinatario, and
+				~it-sdi-pec~ for a PEC address, which goes in the inbox's ~email~ field. You can
+				declare both. A FatturaPA document supports only one destination field, so the
+				conversion prioritises the codice destinatario when it is available, and omits the
+				PEC.
+
+				FatturaPA always asks for a recipient code, and for a tax number when the party is
+				a business. Some customers have neither, so the format defines a fixed value for
+				each case and the conversion writes it for you.
+
+				A codice destinatario names a channel accredited with SDI, so only recipients in
+				Italy have one. An Italian customer who receives by PEC, or who has not given you
+				a code, gets ~0000000~. A customer outside Italy has none, and SDI cannot deliver
+				there anyway, so they get ~XXXXXXX~. The conversion takes it from the country, and
+				any inbox on that customer makes no difference.
+
+				The tax number follows the same idea. A party outside Italy with no VAT number
+				gets ~0000000~. A business outside the EU has a tax number, but SDI can only check
+				EU VAT numbers, so the conversion replaces it with ~OO99999999999~, on suppliers
+				as much as customers. An Italian private individual needs no placeholder: their
+				codice fiscale identifies them, and the conversion writes no tax number for them.
 			`),
 		},
 		Extensions: extensions,
