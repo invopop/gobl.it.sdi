@@ -405,7 +405,7 @@ var extensions = []*cbc.Definition{
 				Code: "N6.2",
 				Name: i18n.String{
 					i18n.EN: "Reverse charge - Transfer of gold and pure silver pursuant to law 7/2000 as well as used jewelery to OPO",
-					i18n.IT: "Inversione contabile - cessione di oro e argento ai sensi della legge 7/2000 nonché di oreficeria usata ad OPO",
+					i18n.IT: "Inversione contabile - cessione di oro e argento ex legge 7/2000 e oreficeria usata ad OPO",
 				},
 			},
 			{
@@ -461,7 +461,7 @@ var extensions = []*cbc.Definition{
 				Code: "N7",
 				Name: i18n.String{
 					i18n.EN: "VAT paid in other EU countries (telecommunications, tele-broadcasting and electronic services provision pursuant to Art. 7 -octies letter a, b, art. 74-sexies Italian Presidential Decree 633/72)",
-					i18n.IT: "IVA assolta in altro stato UE (prestazione di servizi di telecomunicazioni, tele-radiodiffusione ed elettronici ex art. 7-octies lett. a, b, art. 74-sexies DPR 633/72)",
+					i18n.IT: "IVA assolta in altro stato UE ex art. 7-octies lett. a, b, art. 74-sexies DPR 633/72",
 				},
 			},
 		},
