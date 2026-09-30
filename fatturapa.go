@@ -67,6 +67,13 @@ func Convert(env *gobl.Envelope, opts ...Option) (Document, error) {
 		return nil, errors.New("expected an invoice")
 	}
 	config := parseOptions(opts...)
+	if formatoTransmissione(invoice) == formatoTrasmissioneFSM10 {
+		d, err := newSimplifiedInvoice(env, invoice, config)
+		if err != nil {
+			return nil, err
+		}
+		return d, nil
+	}
 	d, err := newOrdinaryInvoice(env, invoice, config)
 	if err != nil {
 		return nil, err
@@ -105,7 +112,7 @@ func newOrdinaryInvoice(env *gobl.Envelope, invoice *bill.Invoice, config *confi
 	}
 
 	if config.Certificate != nil {
-		if err := d.sign(config); err != nil {
+		if d.Signature, err = sign(env, d, config); err != nil {
 			return nil, err
 		}
 	}
@@ -169,7 +176,7 @@ func Parse(doc []byte) (*gobl.Envelope, error) {
 
 // Buffer returns a byte buffer representation of the complete XML document.
 func (d *OrdinaryInvoice) Buffer() (*bytes.Buffer, error) {
-	return d.buffer(xml.Header)
+	return marshal(d, xml.Header)
 }
 
 // String converts a struct representation to its string representation
@@ -190,10 +197,9 @@ func (d *OrdinaryInvoice) Bytes() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (d *OrdinaryInvoice) buffer(base string) (*bytes.Buffer, error) {
+func marshal(doc any, base string) (*bytes.Buffer, error) {
 	buf := bytes.NewBufferString(base)
-	//data, err := xml.MarshalIndent(d, "", "  ")
-	data, err := xml.Marshal(d)
+	data, err := xml.Marshal(doc)
 	if err != nil {
 		return nil, fmt.Errorf("marshal document: %w", err)
 	}

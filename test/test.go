@@ -150,6 +150,17 @@ func LoadSchema() (*xsd.Schema, error) {
 	return schema, nil
 }
 
+// LoadSimplifiedSchema loads the XSD schema for validating simplified invoices
+func LoadSimplifiedSchema() (*xsd.Schema, error) {
+	schemaPath := filepath.Join("schemas", "SVFSM10_v1.0.2.xsd")
+	schema, err := xsd.ParseFromFile(schemaPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return schema, nil
+}
+
 // LoadOptions loads the options for the test
 func LoadOptions() []fatturapa.Option {
 	cert, err := loadCertificate()

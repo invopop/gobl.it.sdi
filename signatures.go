@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/invopop/gobl"
 	"github.com/invopop/xmldsig"
 )
 
@@ -11,14 +12,17 @@ var xadesConfig = &xmldsig.XAdESConfig{
 	Description: "Fattura PA",
 }
 
-func (d *OrdinaryInvoice) sign(config *config) error {
-	data, err := d.canonical()
+// sign produces the XAdES signature of a document that has none yet, over its
+// canonical representation as defined in https://www.w3.org/TR/2001/REC-xml-c14n-20010315
+// (for a simpler explanation look at https://www.di-mgt.com.au/xmldsig-c14n.html).
+func sign(env *gobl.Envelope, doc any, config *config) (*xmldsig.Signature, error) {
+	buf, err := marshal(doc, "")
 	if err != nil {
-		return fmt.Errorf("converting to canonincal format: %w", err)
+		return nil, fmt.Errorf("converting to canonincal format: %w", err)
 	}
 
 	dsigOpts := []xmldsig.Option{
-		xmldsig.WithDocID(d.env.Head.UUID.String()),
+		xmldsig.WithDocID(env.Head.UUID.String()),
 		xmldsig.WithXAdES(xadesConfig),
 	}
 
@@ -36,24 +40,5 @@ func (d *OrdinaryInvoice) sign(config *config) error {
 		}))
 	}
 
-	sig, err := xmldsig.Sign(data, dsigOpts...)
-	if err != nil {
-		return err
-	}
-
-	d.Signature = sig
-
-	return nil
-}
-
-// Canonical converts a struct representation of fatturapa to its
-// canonical representation as defined in https://www.w3.org/TR/2001/REC-xml-c14n-20010315
-// (for a simpler explanation look at https://www.di-mgt.com.au/xmldsig-c14n.html)
-// This is used when we need to create a hash for signing, timestamping, ...
-func (d *OrdinaryInvoice) canonical() ([]byte, error) {
-	buf, err := d.buffer("")
-	if err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
+	return xmldsig.Sign(buf.Bytes(), dsigOpts...)
 }

@@ -1,0 +1,113 @@
+{
+	"$schema": "https://gobl.org/draft-0/envelope",
+	"head": {
+		"uuid": "01a0f2d9-bbdd-756f-a155-ea060ad81ab3",
+		"dig": {
+			"alg": "sha256",
+			"val": "57495ca3908baef7873d57939653b90ce1dc09790a70eb83202e93537fcd166c"
+		}
+	},
+	"doc": {
+		"$schema": "https://gobl.org/draft-0/bill/invoice",
+		"$regime": "IT",
+		"$addons": [
+			"it-sdi-v1"
+		],
+		"$tags": [
+			"simplified"
+		],
+		"uuid": "0190b7a6-6a2c-7000-8f1e-2b6d9a1c3e04",
+		"type": "credit-note",
+		"series": "SEMP",
+		"code": "004",
+		"issue_date": "2026-09-29",
+		"currency": "EUR",
+		"preceding": [
+			{
+				"issue_date": "2026-09-28",
+				"series": "SEMP",
+				"code": "001",
+				"reason": "Storno vino della casa non servito"
+			}
+		],
+		"tax": {
+			"prices_include": "VAT",
+			"ext": {
+				"it-sdi-document-type": "TD08",
+				"it-sdi-format": "FSM10"
+			}
+		},
+		"supplier": {
+			"name": "Trattoria da Mario S.r.l.",
+			"tax_id": {
+				"country": "IT",
+				"code": "12345678903"
+			},
+			"addresses": [
+				{
+					"num": "12",
+					"street": "Via Roma",
+					"locality": "Firenze",
+					"region": "FI",
+					"code": "50123",
+					"country": "IT"
+				}
+			],
+			"ext": {
+				"it-sdi-fiscal-regime": "RF01"
+			}
+		},
+		"customer": {
+			"name": "Studio Rossi S.r.l.",
+			"tax_id": {
+				"country": "IT",
+				"code": "13029381004"
+			}
+		},
+		"lines": [
+			{
+				"i": 1,
+				"quantity": "1",
+				"item": {
+					"name": "Vino della casa",
+					"price": "6.00"
+				},
+				"sum": "6.00",
+				"taxes": [
+					{
+						"cat": "VAT",
+						"key": "standard",
+						"rate": "general",
+						"percent": "22.0%"
+					}
+				],
+				"total": "6.00"
+			}
+		],
+		"totals": {
+			"sum": "6.00",
+			"tax_included": "1.08",
+			"total": "4.92",
+			"taxes": {
+				"categories": [
+					{
+						"code": "VAT",
+						"rates": [
+							{
+								"key": "standard",
+								"base": "4.92",
+								"percent": "22.0%",
+								"amount": "1.08"
+							}
+						],
+						"amount": "1.08"
+					}
+				],
+				"sum": "1.08"
+			},
+			"tax": "1.08",
+			"total_with_tax": "6.00",
+			"payable": "6.00"
+		}
+	}
+}
