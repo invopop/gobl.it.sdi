@@ -81,6 +81,21 @@ func newAddon() *tax.AddonDef {
 				a customer outside Italy; and ~OO99999999999~ in place of a non-EU business's own
 				tax number, since only EU VAT numbers are meaningful to SDI. Leave the field out
 				rather than writing these values yourself.
+
+				## Simplified invoices
+
+				Add the ~simplified~ tag to issue a fattura semplificata (format ~FSM10~,
+				document types ~TD07~, ~TD08~ and ~TD09~). The customer then needs only a partita
+				IVA or codice fiscale; a name is sent only together with an address. The total may
+				not exceed 400.00 EUR unless the supplier is in regime ~RF19~ or ~RF20~ or it is a
+				credit or debit note correcting a preceding invoice, and every charge and discount
+				needs a VAT combo,
+				since the format lists them as entries alongside the lines. A credit or debit note
+				must identify the invoice it corrects, with its date and the reason. Simplified invoices
+				cannot go to a public administration, carry retained taxes or fund contributions,
+				or cover intra-EU supplies (art. 21-bis DPR 633/72). Sales to a habitual exporter
+				(~N3.5~) and stamp duty exemptions (~NB1~, ~NB2~, ~NB3~) need the ordinary format,
+				the only one that carries the declaration of intent and those codes.
 			`),
 		},
 		Extensions: extensions,
