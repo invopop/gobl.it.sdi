@@ -3,7 +3,7 @@
 		<DatiTrasmissione>
 			<IdTrasmittente>
 				<IdPaese>IT</IdPaese>
-				<IdCodice>CPPPPT66D17F205Z</IdCodice>
+				<IdCodice>01234567890</IdCodice>
 			</IdTrasmittente>
 			<ProgressivoInvio>0kNal</ProgressivoInvio>
 			<FormatoTrasmissione>FPR12</FormatoTrasmissione>
@@ -13,21 +13,21 @@
 			<DatiAnagrafici>
 				<IdFiscaleIVA>
 					<IdPaese>IT</IdPaese>
-					<IdCodice>04358650960</IdCodice>
+					<IdCodice>12345678903</IdCodice>
 				</IdFiscaleIVA>
-				<CodiceFiscale>CPPPPT66D17F205Z</CodiceFiscale>
+				<CodiceFiscale>MRALNE80E05H501C</CodiceFiscale>
 				<Anagrafica>
-					<Nome>PAOLO PIETRO</Nome>
-					<Cognome>CAPPELLARI</Cognome>
+					<Nome>MARIO</Nome>
+					<Cognome>LEONI</Cognome>
 				</Anagrafica>
 				<RegimeFiscale>RF01</RegimeFiscale>
 			</DatiAnagrafici>
 			<Sede>
-				<Indirizzo>VIA NOVARA</Indirizzo>
-				<NumeroCivico>116/1</NumeroCivico>
-				<CAP>20153</CAP>
-				<Comune>MILANO</Comune>
-				<Provincia>MI</Provincia>
+				<Indirizzo>VIALE DEI LAVORATORI</Indirizzo>
+				<NumeroCivico>32</NumeroCivico>
+				<CAP>50100</CAP>
+				<Comune>FIRENZE</Comune>
+				<Provincia>FI</Provincia>
 				<Nazione>IT</Nazione>
 			</Sede>
 		</CedentePrestatore>
@@ -35,18 +35,18 @@
 			<DatiAnagrafici>
 				<IdFiscaleIVA>
 					<IdPaese>IT</IdPaese>
-					<IdCodice>11537360965</IdCodice>
+					<IdCodice>09876543217</IdCodice>
 				</IdFiscaleIVA>
-				<CodiceFiscale>11537360965</CodiceFiscale>
+				<CodiceFiscale>09876543217</CodiceFiscale>
 				<Anagrafica>
 					<Denominazione>MR. ADVENTURES S.R.L.</Denominazione>
 				</Anagrafica>
 			</DatiAnagrafici>
 			<Sede>
-				<Indirizzo>VIA PISANI VITTOR 19</Indirizzo>
-				<CAP>20124</CAP>
-				<Comune>MILANO</Comune>
-				<Provincia>MI</Provincia>
+				<Indirizzo>VIALE DELLA LIBERTÀ 1</Indirizzo>
+				<CAP>00100</CAP>
+				<Comune>ROMA</Comune>
+				<Provincia>RM</Provincia>
 				<Nazione>IT</Nazione>
 			</Sede>
 		</CessionarioCommittente>
@@ -94,7 +94,7 @@
 				<ModalitaPagamento>MP05</ModalitaPagamento>
 				<DataRiferimentoTerminiPagamento>2026-04-24</DataRiferimentoTerminiPagamento>
 				<ImportoPagamento>1175.68</ImportoPagamento>
-				<IBAN>IT15C0358901600010570241743</IBAN>
+				<IBAN>IT60X0542811101000000123456</IBAN>
 			</DettaglioPagamento>
 		</DatiPagamento>
 	</FatturaElettronicaBody>
