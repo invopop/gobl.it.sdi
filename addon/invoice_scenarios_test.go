@@ -62,6 +62,17 @@ func TestInvoiceScenarioExtensions(t *testing.T) {
 		assert.Equal(t, "FPA12", inv.Tax.Ext.Get(sdi.ExtKeyFormat).String())
 	})
 
+	t.Run("simplified overwrites the format to FSM10", func(t *testing.T) {
+		inv := scenarioInvoice(t)
+		inv.SetTags(tax.TagSimplified)
+		inv.Tax = &bill.Tax{
+			Ext: tax.ExtensionsOf(cbc.CodeMap{sdi.ExtKeyFormat: "XXXX"}),
+		}
+		require.NoError(t, inv.Calculate())
+		assert.Equal(t, "FSM10", inv.Tax.Ext.Get(sdi.ExtKeyFormat).String())
+		assert.Equal(t, "TD07", inv.Tax.Ext.Get(sdi.ExtKeyDocumentType).String())
+	})
+
 	t.Run("non-B2G overwrites the format to FPR12", func(t *testing.T) {
 		inv := scenarioInvoice(t)
 		inv.Tax = &bill.Tax{
