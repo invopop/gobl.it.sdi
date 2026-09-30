@@ -34,8 +34,16 @@ const (
 	schemaLocation     = "http://ivaservizi.agenziaentrate.gov.it/docs/xsd/fatture/v1.2 https://www.fatturapa.gov.it/export/documenti/fatturapa/v1.2.2/Schema_del_file_xml_FatturaPA_v1.2.2.xsd"
 )
 
-// Document is a pseudo-model for containing the XML document being created.
-type Document struct {
+// Document is a FatturaPA document ready to be sent to SDI.
+type Document interface {
+	Buffer() (*bytes.Buffer, error)
+	String() (string, error)
+	Bytes() ([]byte, error)
+}
+
+// OrdinaryInvoice is the FatturaElettronica document, used by the FPA12 and
+// FPR12 formats.
+type OrdinaryInvoice struct {
 	env *gobl.Envelope `xml:"-"` // Envelope to convert.
 
 	XMLName        xml.Name `xml:"p:FatturaElettronica"`
@@ -53,18 +61,24 @@ type Document struct {
 
 // Convert expects the base envelope and provides a new Document
 // containing the XML version.
-func Convert(env *gobl.Envelope, opts ...Option) (*Document, error) {
+func Convert(env *gobl.Envelope, opts ...Option) (Document, error) {
 	invoice, ok := env.Extract().(*bill.Invoice)
 	if !ok || invoice == nil {
 		return nil, errors.New("expected an invoice")
 	}
+	config := parseOptions(opts...)
+	d, err := newOrdinaryInvoice(env, invoice, config)
+	if err != nil {
+		return nil, err
+	}
+	return d, nil
+}
 
+func newOrdinaryInvoice(env *gobl.Envelope, invoice *bill.Invoice, config *config) (*OrdinaryInvoice, error) {
 	// Make sure we're dealing with raw data
 	if err := invoice.RemoveIncludedTaxes(); err != nil {
 		return nil, err
 	}
-
-	config := parseOptions(opts...)
 
 	TransmissionData := newTransmissionData(invoice, env, config.Transmitter)
 
@@ -79,7 +93,7 @@ func Convert(env *gobl.Envelope, opts ...Option) (*Document, error) {
 	}
 
 	// Basic document headers
-	d := &Document{
+	d := &OrdinaryInvoice{
 		env:            env,
 		FPANamespace:   namespaceFatturaPA,
 		DSigNamespace:  namespaceDSig,
@@ -108,7 +122,7 @@ func Parse(doc []byte) (*gobl.Envelope, error) {
 		return nil, fmt.Errorf("convert encoding: %w", err)
 	}
 
-	d := &Document{}
+	d := &OrdinaryInvoice{}
 	if err := xmlctx.Unmarshal(convertedDoc, d, xmlctx.WithNamespaces(map[string]string{
 		"p":   namespaceFatturaPA,
 		"ds":  namespaceDSig,
@@ -154,12 +168,12 @@ func Parse(doc []byte) (*gobl.Envelope, error) {
 }
 
 // Buffer returns a byte buffer representation of the complete XML document.
-func (d *Document) Buffer() (*bytes.Buffer, error) {
+func (d *OrdinaryInvoice) Buffer() (*bytes.Buffer, error) {
 	return d.buffer(xml.Header)
 }
 
 // String converts a struct representation to its string representation
-func (d *Document) String() (string, error) {
+func (d *OrdinaryInvoice) String() (string, error) {
 	buf, err := d.Buffer()
 	if err != nil {
 		return "", err
@@ -168,7 +182,7 @@ func (d *Document) String() (string, error) {
 }
 
 // Bytes returns the XML document bytes
-func (d *Document) Bytes() ([]byte, error) {
+func (d *OrdinaryInvoice) Bytes() ([]byte, error) {
 	buf, err := d.Buffer()
 	if err != nil {
 		return nil, err
@@ -176,7 +190,7 @@ func (d *Document) Bytes() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (d *Document) buffer(base string) (*bytes.Buffer, error) {
+func (d *OrdinaryInvoice) buffer(base string) (*bytes.Buffer, error) {
 	buf := bytes.NewBufferString(base)
 	//data, err := xml.MarshalIndent(d, "", "  ")
 	data, err := xml.Marshal(d)

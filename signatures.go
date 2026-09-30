@@ -11,7 +11,7 @@ var xadesConfig = &xmldsig.XAdESConfig{
 	Description: "Fattura PA",
 }
 
-func (d *Document) sign(config *config) error {
+func (d *OrdinaryInvoice) sign(config *config) error {
 	data, err := d.canonical()
 	if err != nil {
 		return fmt.Errorf("converting to canonincal format: %w", err)
@@ -50,7 +50,7 @@ func (d *Document) sign(config *config) error {
 // canonical representation as defined in https://www.w3.org/TR/2001/REC-xml-c14n-20010315
 // (for a simpler explanation look at https://www.di-mgt.com.au/xmldsig-c14n.html)
 // This is used when we need to create a hash for signing, timestamping, ...
-func (d *Document) canonical() ([]byte, error) {
+func (d *OrdinaryInvoice) canonical() ([]byte, error) {
 	buf, err := d.buffer("")
 	if err != nil {
 		return nil, err
