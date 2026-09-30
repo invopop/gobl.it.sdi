@@ -135,7 +135,7 @@ func LoadTestFile(file string, testPath string) *gobl.Envelope {
 
 // LoadSchema loads a XSD schema for validating XML documents
 func LoadSchema() (*xsd.Schema, error) {
-	schemaPath := filepath.Join("schemas", "FatturaPA_v1.2.2.xsd")
+	schemaPath := filepath.Join("schemas", "FatturaPA_v1.2.3.xsd")
 	schema, err := xsd.ParseFromFile(schemaPath)
 	if err != nil {
 		return nil, err
