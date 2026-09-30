@@ -18,6 +18,47 @@ var partyHasTaxIDCode = org.PartyHasTaxIDCode()
 
 func normalizeInvoice(inv *bill.Invoice) {
 	normalizeSupplier(inv.Supplier)
+	normalizeIssuerType(inv)
+}
+
+// normalizeIssuerType infers who compiled the invoice. A value already set is
+// kept: a customer-compiled invoice may also name an intermediary.
+func normalizeIssuerType(inv *bill.Invoice) {
+	if inv.Tax.GetExt(ExtKeyIssuerType) != "" {
+		return
+	}
+	if inv.Ordering != nil && inv.Ordering.Issuer != nil {
+		inv.Tax = inv.Tax.MergeExtensions(tax.ExtensionsOf(cbc.CodeMap{
+			ExtKeyIssuerType: ExtCodeIssuerTypeThirdParty,
+		}))
+		return
+	}
+	if inv.HasTags(tax.TagSelfBilled) && invoicePartiesDiffer(inv.Supplier, inv.Customer) {
+		inv.Tax = inv.Tax.MergeExtensions(tax.ExtensionsOf(cbc.CodeMap{
+			ExtKeyIssuerType: ExtCodeIssuerTypeCustomer,
+		}))
+	}
+}
+
+// invoicePartiesDiffer reports whether the parties carry identifiers that
+// prove they are different entities. Each pair only counts when both sides
+// are present, and a pair that matches or is incomplete leaves the remaining
+// identifiers to decide.
+func invoicePartiesDiffer(s, c *org.Party) bool {
+	if s == nil || c == nil {
+		return false
+	}
+	if s.TaxID != nil && c.TaxID != nil {
+		if s.TaxID.Country != "" && c.TaxID.Country != "" && s.TaxID.Country != c.TaxID.Country {
+			return true
+		}
+		if s.TaxID.Code != "" && c.TaxID.Code != "" && s.TaxID.Code != c.TaxID.Code {
+			return true
+		}
+	}
+	sf := org.IdentityForKey(s.Identities, it.IdentityKeyFiscalCode)
+	cf := org.IdentityForKey(c.Identities, it.IdentityKeyFiscalCode)
+	return sf != nil && cf != nil && sf.Code != cf.Code
 }
 
 func normalizeSupplier(party *org.Party) {
@@ -177,6 +218,24 @@ func billInvoiceRules() *rules.Set {
 		rules.Assert("21", "payment instructions are required when terms with due dates are present",
 			is.Func("payment instructions check", invoicePaymentInstructionsPresent),
 		),
+		// Issuer: a third party issuing the invoice must be identified and named
+		rules.Assert("23", "issuer tax ID code or fiscal code is required",
+			is.Func("issuer identification check", invoiceIssuerHasTaxIDCodeOrFiscalCode),
+		),
+		rules.Assert("24", "issuer name must use Latin-1 characters",
+			is.Func("issuer latin1 check", invoiceIssuerNameIsLatin1),
+		),
+		rules.Assert("25", "issuer name or people is required",
+			is.Func("issuer name check", invoiceIssuerHasNameOrPeople),
+		),
+		rules.Field("tax",
+			rules.Field("ext",
+				rules.Assert("26",
+					fmt.Sprintf("tax extension '%s' must have a valid code", ExtKeyIssuerType),
+					tax.ExtensionHasValidCode(ExtKeyIssuerType),
+				),
+			),
+		),
 	)
 }
 
@@ -258,6 +317,42 @@ func invoiceCustomerHasFiscalCodeIdentity(val any) bool {
 		return false
 	}
 	return org.IdentityForKey(ids, it.IdentityKeyFiscalCode) != nil
+}
+
+func invoiceIssuerHasTaxIDCodeOrFiscalCode(val any) bool {
+	inv, ok := val.(*bill.Invoice)
+	if !ok || inv == nil || inv.Ordering == nil || inv.Ordering.Issuer == nil {
+		return true
+	}
+	return partyHasTaxIDCode.Check(inv.Ordering.Issuer) || hasFiscalCode(inv.Ordering.Issuer)
+}
+
+// invoiceIssuerNameIsLatin1 checks the name the converter writes to
+// Anagrafica: the party name when set, otherwise the first person's.
+func invoiceIssuerNameIsLatin1(val any) bool {
+	inv, ok := val.(*bill.Invoice)
+	if !ok || inv == nil || inv.Ordering == nil || inv.Ordering.Issuer == nil {
+		return true
+	}
+	issuer := inv.Ordering.Issuer
+	if issuer.Name != "" {
+		return validateLatin1String(issuer.Name) == nil
+	}
+	if len(issuer.People) == 0 || issuer.People[0].Name == nil {
+		return true
+	}
+	name := issuer.People[0].Name
+	return validateLatin1String(name.Given) == nil &&
+		validateLatin1String(name.Surname) == nil &&
+		validateLatin1String(name.Prefix) == nil
+}
+
+func invoiceIssuerHasNameOrPeople(val any) bool {
+	inv, ok := val.(*bill.Invoice)
+	if !ok || inv == nil || inv.Ordering == nil || inv.Ordering.Issuer == nil {
+		return true
+	}
+	return inv.Ordering.Issuer.Name != "" || len(inv.Ordering.Issuer.People) > 0
 }
 
 func invoiceHasDeferredTag(val any) bool {
