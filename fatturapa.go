@@ -129,6 +129,14 @@ func Parse(doc []byte) (*gobl.Envelope, error) {
 		return nil, fmt.Errorf("convert encoding: %w", err)
 	}
 
+	ns, err := rootNamespace(convertedDoc)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshal document: %w", err)
+	}
+	if ns == namespaceFatturaPASimplified {
+		return parseSimplified(convertedDoc)
+	}
+
 	d := &OrdinaryInvoice{}
 	if err := xmlctx.Unmarshal(convertedDoc, d, xmlctx.WithNamespaces(map[string]string{
 		"p":   namespaceFatturaPA,
@@ -207,6 +215,21 @@ func marshal(doc any, base string) (*bytes.Buffer, error) {
 		return nil, fmt.Errorf("writing to buffer: %w", err)
 	}
 	return buf, nil
+}
+
+// rootNamespace returns the namespace of the document's root element, which
+// tells the ordinary and simplified formats apart.
+func rootNamespace(doc []byte) (string, error) {
+	dec := xml.NewDecoder(bytes.NewReader(doc))
+	for {
+		tok, err := dec.Token()
+		if err != nil {
+			return "", err
+		}
+		if se, ok := tok.(xml.StartElement); ok {
+			return se.Name.Space, nil
+		}
+	}
 }
 
 // convertToUTF8 detects the encoding from the XML declaration and converts

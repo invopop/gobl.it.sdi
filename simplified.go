@@ -41,7 +41,10 @@ type SimplifiedHeader struct {
 type SimplifiedSupplier struct {
 	TaxID      *TaxID `xml:"IdFiscaleIVA"`
 	FiscalCode string `xml:"CodiceFiscale,omitempty"`
-	PartyName
+	// Name of the business, or given name and surname of the person
+	Name         string        `xml:"Denominazione,omitempty"`
+	Given        string        `xml:"Nome,omitempty"`
+	Surname      string        `xml:"Cognome,omitempty"`
 	Address      *Address      `xml:"Sede"`
 	Registration *Registration `xml:"IscrizioneREA,omitempty"`
 	FiscalRegime string        `xml:"RegimeFiscale"`
@@ -62,16 +65,11 @@ type FiscalIdentifiers struct {
 // OtherIdentifiers hold the customer's name and address, which the simplified
 // format only accepts together.
 type OtherIdentifiers struct {
-	PartyName
+	// Name of the business, or given name and surname of the person
+	Name    string   `xml:"Denominazione,omitempty"`
+	Given   string   `xml:"Nome,omitempty"`
+	Surname string   `xml:"Cognome,omitempty"`
 	Address *Address `xml:"Sede"`
-}
-
-// PartyName is the name of a business, or the given name and surname of a
-// person.
-type PartyName struct {
-	Name    string `xml:"Denominazione,omitempty"`
-	Given   string `xml:"Nome,omitempty"`
-	Surname string `xml:"Cognome,omitempty"`
 }
 
 func newSimplifiedInvoice(env *gobl.Envelope, inv *bill.Invoice, config *config) (*SimplifiedInvoice, error) {
@@ -108,11 +106,13 @@ func newSimplifiedInvoice(env *gobl.Envelope, inv *bill.Invoice, config *config)
 
 func newSimplifiedSupplier(s *org.Party) (*SimplifiedSupplier, error) {
 	ns := &SimplifiedSupplier{
-		PartyName:    newPartyName(s),
 		Registration: newRegistration(s),
 		FiscalRegime: "RF01",
 	}
 
+	if p := newProfile(s); p != nil {
+		ns.Name, ns.Given, ns.Surname = p.Name, p.Given, p.Surname
+	}
 	if s.TaxID != nil {
 		ns.TaxID = partyTaxID(s.TaxID)
 	}
@@ -149,22 +149,16 @@ func newSimplifiedCustomer(c *org.Party) *SimplifiedCustomer {
 
 	// A name without an address has no place in the format, and the fiscal
 	// identifiers are enough to identify the customer.
-	if name := newPartyName(c); name != (PartyName{}) && len(c.Addresses) > 0 {
+	if p := newProfile(c); p != nil && len(c.Addresses) > 0 {
 		nc.OtherIdentifiers = &OtherIdentifiers{
-			PartyName: name,
-			Address:   newAddress(c.Addresses[0]),
+			Name:    p.Name,
+			Given:   p.Given,
+			Surname: p.Surname,
+			Address: newAddress(c.Addresses[0]),
 		}
 	}
 
 	return nc
-}
-
-func newPartyName(party *org.Party) PartyName {
-	p := newProfile(party)
-	if p == nil {
-		return PartyName{}
-	}
-	return PartyName{Name: p.Name, Given: p.Given, Surname: p.Surname}
 }
 
 // Buffer returns a byte buffer representation of the complete XML document.
