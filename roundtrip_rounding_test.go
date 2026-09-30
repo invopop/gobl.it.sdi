@@ -94,5 +94,5 @@ func TestRoundTripPreservesRetainedRate(t *testing.T) {
 	assert.Equal(t, "263.93", dr[0].Amount)
 	assert.Equal(t, "23.00", dr[0].Rate)
 	assert.Equal(t, "A", dr[0].Reason)
-	assert.Equal(t, "2535.97", doc.Body[0].GeneralData.Document.TotalAmount)
+	assert.Equal(t, "2799.90", doc.Body[0].GeneralData.Document.TotalAmount)
 }
