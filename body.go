@@ -7,6 +7,7 @@ import (
 	sdi "github.com/invopop/gobl.it.sdi/addon"
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/cbc"
+	"github.com/invopop/gobl/num"
 	"github.com/invopop/gobl/org"
 	"github.com/invopop/gobl/tax"
 )
@@ -217,13 +218,22 @@ func newGeneralDocumentData(inv *bill.Invoice) (*GeneralDocumentData, error) {
 		RetainedTaxes:     dr,
 		StampDuty:         newStampDuty(inv.Charges),
 		FundContributions: newFundContributions(inv.Charges),
-		TotalAmount:       formatAmount2(&inv.Totals.Payable),
+		TotalAmount:       formatAmount2(documentTotal(inv)),
 		Rounding:          formatAmount2(inv.Totals.Rounding),
 		PriceAdjustments:  extractPriceAdjustments(inv),
 		Reasons:           extractInvoiceReasons(inv),
 	}
 
 	return doc, nil
+}
+
+// documentTotal is the total with tax plus rounding, before any withholding.
+func documentTotal(inv *bill.Invoice) *num.Amount {
+	t := inv.Totals.TotalWithTax
+	if inv.Totals.Rounding != nil {
+		t = t.Add(*inv.Totals.Rounding)
+	}
+	return &t
 }
 
 func findCodeDocumentType(inv *bill.Invoice) (string, error) {
