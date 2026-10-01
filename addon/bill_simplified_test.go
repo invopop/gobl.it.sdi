@@ -98,6 +98,14 @@ func TestSimplifiedInvoiceValidation(t *testing.T) {
 		assert.NoError(t, rules.Validate(inv))
 	})
 
+	t.Run("supplier and customer with fiscal codes of their own", func(t *testing.T) {
+		inv := testInvoiceSimplified(t)
+		inv.Supplier.Identities = []*org.Identity{{Key: it.IdentityKeyFiscalCode, Code: "RSSGNN60R30H501U"}}
+		inv.Customer.Identities = []*org.Identity{{Key: it.IdentityKeyFiscalCode, Code: "13029381004"}}
+		require.NoError(t, inv.Calculate())
+		assert.NoError(t, rules.Validate(inv))
+	})
+
 	t.Run("customer without an address", func(t *testing.T) {
 		inv := testInvoiceSimplified(t)
 		inv.Customer.Addresses = nil
@@ -318,10 +326,32 @@ func TestSimplifiedInvoiceValidation(t *testing.T) {
 	})
 
 	t.Run("supplier is also the customer", func(t *testing.T) {
-		inv := testInvoiceSimplified(t)
-		inv.Customer.TaxID = &tax.Identity{Country: "IT", Code: "12345678903"}
-		require.NoError(t, inv.Calculate())
-		assert.ErrorContains(t, rules.Validate(inv), "simplified invoice supplier and customer must be different parties")
+		fiscalCode := func(code cbc.Code) []*org.Identity {
+			return []*org.Identity{{Key: it.IdentityKeyFiscalCode, Code: code}}
+		}
+		fiscalCodeOnly := func(code cbc.Code) *org.Party {
+			return &org.Party{TaxID: &tax.Identity{Country: "IT"}, Identities: fiscalCode(code)}
+		}
+		for name, setup := range map[string]func(inv *bill.Invoice){
+			"same VAT ID": func(inv *bill.Invoice) {
+				inv.Customer.TaxID = &tax.Identity{Country: "IT", Code: "12345678903"}
+			},
+			"customer fiscal code is the supplier VAT number": func(inv *bill.Invoice) {
+				inv.Customer = fiscalCodeOnly("12345678903")
+			},
+			"supplier fiscal code is the customer VAT number": func(inv *bill.Invoice) {
+				inv.Supplier.Identities = fiscalCode("13029381004")
+			},
+			"same fiscal code": func(inv *bill.Invoice) {
+				inv.Supplier.Identities = fiscalCode("RSSGNN60R30H501U")
+				inv.Customer = fiscalCodeOnly("RSSGNN60R30H501U")
+			},
+		} {
+			inv := testInvoiceSimplified(t)
+			setup(inv)
+			require.NoError(t, inv.Calculate(), name)
+			assert.ErrorContains(t, rules.Validate(inv), "simplified invoice supplier and customer must be different parties", name)
+		}
 	})
 
 	t.Run("supplier and customer both outside Italy", func(t *testing.T) {

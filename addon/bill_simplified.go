@@ -1,6 +1,7 @@
 package sdi
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/invopop/gobl/bill"
@@ -8,6 +9,8 @@ import (
 	"github.com/invopop/gobl/currency"
 	"github.com/invopop/gobl/l10n"
 	"github.com/invopop/gobl/num"
+	"github.com/invopop/gobl/org"
+	"github.com/invopop/gobl/regimes/it"
 	"github.com/invopop/gobl/rules"
 	"github.com/invopop/gobl/rules/is"
 	"github.com/invopop/gobl/tax"
@@ -352,11 +355,30 @@ func invoiceSupplierIsNotCustomer(val any) bool {
 	if inv.Supplier == nil || inv.Customer == nil {
 		return true
 	}
-	s, c := inv.Supplier.TaxID, inv.Customer.TaxID
-	if s == nil || c == nil || s.Code == cbc.CodeEmpty {
-		return true
+	supplierIDs := partyFiscalIDs(inv.Supplier)
+	for _, id := range partyFiscalIDs(inv.Customer) {
+		if slices.Contains(supplierIDs, id) {
+			return false
+		}
 	}
-	return s.Country != c.Country || s.Code != c.Code
+	return true
+}
+
+// partyFiscalIDs lists the VAT ID and fiscal codes that identify a party in the
+// FSM10 header. An Italian VAT number also counts as a fiscal code, because a
+// company's codice fiscale is its partita IVA.
+func partyFiscalIDs(p *org.Party) []string {
+	var ids []string
+	if p.TaxID != nil && p.TaxID.Code != cbc.CodeEmpty {
+		ids = append(ids, "vat:"+p.TaxID.Country.String()+p.TaxID.Code.String())
+		if p.TaxID.Country.In("IT") {
+			ids = append(ids, "cf:"+p.TaxID.Code.String())
+		}
+	}
+	if id := org.IdentityForKey(p.Identities, it.IdentityKeyFiscalCode); id != nil && id.Code != cbc.CodeEmpty {
+		ids = append(ids, "cf:"+id.Code.String())
+	}
+	return ids
 }
 
 // invoiceHasPartyInItaly applies SDI check 00476.
