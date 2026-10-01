@@ -18,7 +18,7 @@ var xadesConfig = &xmldsig.XAdESConfig{
 func sign(env *gobl.Envelope, doc any, config *config) (*xmldsig.Signature, error) {
 	buf, err := marshal(doc, "")
 	if err != nil {
-		return nil, fmt.Errorf("converting to canonincal format: %w", err)
+		return nil, fmt.Errorf("converting to canonical format: %w", err)
 	}
 
 	dsigOpts := []xmldsig.Option{
