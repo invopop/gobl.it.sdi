@@ -153,6 +153,16 @@ var invoiceScenarios = &tax.ScenarioSet{
 				ExtKeyFormat: "FPA12",
 			}),
 		},
+		{
+			Tags: []cbc.Key{tax.TagSimplified},
+			Name: i18n.String{
+				i18n.EN: "Simplified Invoice",
+				i18n.IT: "Fattura Semplificata",
+			},
+			Ext: tax.ExtensionsOf(cbc.CodeMap{
+				ExtKeyFormat: "FSM10",
+			}),
+		},
 		// **** TIPO DOCUMENTO ****
 		{
 			// Default

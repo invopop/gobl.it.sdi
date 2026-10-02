@@ -39,7 +39,8 @@ var extensions = []*cbc.Definition{
 			i18n.EN: here.Doc(`
 				Code used to describe the transmission format of the invoice. It is set
 				during calculation from the invoice's tags: "FPA12" when the invoice
-				carries the "b2g" tag, and "FPR12" otherwise.
+				carries the "b2g" tag, "FSM10" when it carries the "simplified" tag,
+				and "FPR12" otherwise.
 			`),
 		},
 		Values: []*cbc.Definition{
@@ -55,6 +56,13 @@ var extensions = []*cbc.Definition{
 				Name: i18n.String{
 					i18n.EN: "Private Parties (default)",
 					i18n.IT: "Soggetti Privati (predefinito)",
+				},
+			},
+			{
+				Code: "FSM10",
+				Name: i18n.String{
+					i18n.EN: "Private Parties, Simplified",
+					i18n.IT: "Soggetti Privati, Semplificata",
 				},
 			},
 		},
@@ -306,6 +314,10 @@ var extensions = []*cbc.Definition{
 			{Code: "RF18", Name: i18n.String{
 				i18n.EN: "Other",
 				i18n.IT: "Altro",
+			}},
+			{Code: "RF20", Name: i18n.String{
+				i18n.EN: "Cross-border VAT franchise (EU Directive 2020/285)",
+				i18n.IT: "Regime transfrontaliero di Franchigia IVA (Direttiva UE 2020/285)",
 			}},
 		},
 	},

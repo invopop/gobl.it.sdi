@@ -120,6 +120,7 @@ func TestNormalizeStatusFailedDeliveryFormat(t *testing.T) {
 		for format, want := range map[cbc.Code]cbc.Key{
 			"FPA12": bill.StatusLineProcessing,
 			"FPR12": bill.StatusLineAcknowledged,
+			"FSM10": bill.StatusLineAcknowledged,
 		} {
 			st := status(line(cbc.CodeMap{
 				sdi.ExtKeyNotification: "MC",

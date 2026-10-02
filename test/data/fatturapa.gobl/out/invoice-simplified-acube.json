@@ -1,0 +1,120 @@
+{
+	"$regime": "IT",
+	"$addons": [
+		"it-sdi-v1"
+	],
+	"$tags": [
+		"simplified"
+	],
+	"uuid": "00000000-0000-0000-0000-000000000000",
+	"type": "standard",
+	"code": "13",
+	"issue_date": "2020-06-26",
+	"currency": "EUR",
+	"tax": {
+		"prices_include": "VAT",
+		"ext": {
+			"it-sdi-document-type": "TD07",
+			"it-sdi-format": "FSM10"
+		}
+	},
+	"supplier": {
+		"name": "ANTONINO CACCAMO",
+		"tax_id": {
+			"country": "IT",
+			"code": "01754930384"
+		},
+		"identities": [
+			{
+				"key": "it-fiscal-code",
+				"code": "CCCNNN80D07L407I"
+			}
+		],
+		"people": [
+			{
+				"name": {
+					"given": "ANTONINO",
+					"surname": "CACCAMO"
+				}
+			}
+		],
+		"addresses": [
+			{
+				"street": "VIA RAVENNA 402/B",
+				"locality": "FERRARA",
+				"region": "FE",
+				"code": "44124",
+				"country": "IT"
+			}
+		],
+		"ext": {
+			"it-sdi-fiscal-regime": "RF01"
+		}
+	},
+	"customer": {
+		"name": "A-Cube s.r.l.",
+		"tax_id": {
+			"country": "IT",
+			"code": "10442360961"
+		},
+		"inboxes": [
+			{
+				"key": "it-sdi-code",
+				"code": "OG04W6V"
+			}
+		],
+		"addresses": [
+			{
+				"street": "Viale San Martino 57",
+				"locality": "Arcore",
+				"region": "MB",
+				"code": "20862",
+				"country": "IT"
+			}
+		]
+	},
+	"lines": [
+		{
+			"i": 1,
+			"quantity": "1",
+			"item": {
+				"name": "test",
+				"price": "100.00"
+			},
+			"sum": "100.00",
+			"taxes": [
+				{
+					"cat": "VAT",
+					"key": "standard",
+					"percent": "22.00%"
+				}
+			],
+			"total": "100.00"
+		}
+	],
+	"totals": {
+		"sum": "100.00",
+		"tax_included": "18.03",
+		"total": "81.97",
+		"taxes": {
+			"categories": [
+				{
+					"code": "VAT",
+					"rates": [
+						{
+							"key": "standard",
+							"base": "81.97",
+							"percent": "22.00%",
+							"amount": "18.03"
+						}
+					],
+					"amount": "18.03"
+				}
+			],
+			"sum": "18.03"
+		},
+		"tax": "18.03",
+		"total_with_tax": "100.00",
+		"payable": "100.00"
+	}
+}

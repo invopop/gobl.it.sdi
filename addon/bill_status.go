@@ -16,7 +16,7 @@ import (
 // MC (Mancata Consegna — failed delivery) is the only code whose status
 // depends on the recipient: for a public administration (it-sdi-format FPA12)
 // delivery may still complete later via an AT, so it is non-terminal
-// (processing); for a business recipient (FPR12) it is terminal
+// (processing); for a private recipient (FPR12 or FSM10) it is terminal
 // (acknowledged).
 func normalizeStatus(st *bill.Status) {
 	if st == nil {
@@ -93,7 +93,7 @@ func normalizeStatusLine(line *bill.StatusLine) {
 		switch line.Ext.Get(ExtKeyFormat) {
 		case "FPA12":
 			line.Key = bill.StatusLineProcessing
-		case "FPR12":
+		case "FPR12", "FSM10":
 			line.Key = bill.StatusLineAcknowledged
 		}
 	case "EC01":
