@@ -34,16 +34,9 @@ const (
 	schemaLocation     = "http://ivaservizi.agenziaentrate.gov.it/docs/xsd/fatture/v1.2 https://www.fatturapa.gov.it/export/documenti/fatturapa/v1.2.2/Schema_del_file_xml_FatturaPA_v1.2.2.xsd"
 )
 
-// Document is a FatturaPA document ready to be sent to SDI.
-type Document interface {
-	Buffer() (*bytes.Buffer, error)
-	String() (string, error)
-	Bytes() ([]byte, error)
-}
-
-// OrdinaryInvoice is the FatturaElettronica document, used by the FPA12 and
+// Invoice is the FatturaElettronica document, used by the FPA12 and
 // FPR12 formats.
-type OrdinaryInvoice struct {
+type Invoice struct {
 	env *gobl.Envelope `xml:"-"` // Envelope to convert.
 
 	XMLName        xml.Name `xml:"p:FatturaElettronica"`
@@ -59,9 +52,10 @@ type OrdinaryInvoice struct {
 	Signature *xmldsig.Signature `xml:"ds:Signature,omitempty"`
 }
 
-// Convert expects the base envelope and provides a new Document
-// containing the XML version.
-func Convert(env *gobl.Envelope, opts ...Option) (Document, error) {
+// Convert expects the base envelope and provides the FatturaPA document of its
+// invoice: an *Invoice for the FPA12 and FPR12 formats, or a *SimplifiedInvoice
+// for FSM10, following the invoice's it-sdi-format extension.
+func Convert(env *gobl.Envelope, opts ...Option) (any, error) {
 	invoice, ok := env.Extract().(*bill.Invoice)
 	if !ok || invoice == nil {
 		return nil, errors.New("expected an invoice")
@@ -74,14 +68,39 @@ func Convert(env *gobl.Envelope, opts ...Option) (Document, error) {
 		}
 		return d, nil
 	}
-	d, err := newOrdinaryInvoice(env, invoice, config)
+	d, err := newInvoice(env, invoice, config)
 	if err != nil {
 		return nil, err
 	}
 	return d, nil
 }
 
-func newOrdinaryInvoice(env *gobl.Envelope, invoice *bill.Invoice, config *config) (*OrdinaryInvoice, error) {
+// ConvertInvoice converts an envelope with an invoice in the FPA12 or FPR12
+// format into a FatturaElettronica document.
+func ConvertInvoice(env *gobl.Envelope, opts ...Option) (*Invoice, error) {
+	doc, err := Convert(env, opts...)
+	if err != nil {
+		return nil, err
+	}
+	inv, ok := doc.(*Invoice)
+	if !ok {
+		return nil, fmt.Errorf("expected an ordinary invoice, got %T", doc)
+	}
+	return inv, nil
+}
+
+// Bytes returns the XML of a document returned by Convert.
+func Bytes(doc any) ([]byte, error) {
+	switch d := doc.(type) {
+	case *Invoice:
+		return d.Bytes()
+	case *SimplifiedInvoice:
+		return d.Bytes()
+	}
+	return nil, fmt.Errorf("unsupported document type %T", doc)
+}
+
+func newInvoice(env *gobl.Envelope, invoice *bill.Invoice, config *config) (*Invoice, error) {
 	// Make sure we're dealing with raw data
 	if err := invoice.RemoveIncludedTaxes(); err != nil {
 		return nil, err
@@ -100,7 +119,7 @@ func newOrdinaryInvoice(env *gobl.Envelope, invoice *bill.Invoice, config *confi
 	}
 
 	// Basic document headers
-	d := &OrdinaryInvoice{
+	d := &Invoice{
 		env:            env,
 		FPANamespace:   namespaceFatturaPA,
 		DSigNamespace:  namespaceDSig,
@@ -137,7 +156,7 @@ func Parse(doc []byte) (*gobl.Envelope, error) {
 		return parseSimplified(convertedDoc)
 	}
 
-	d := &OrdinaryInvoice{}
+	d := &Invoice{}
 	if err := xmlctx.Unmarshal(convertedDoc, d, xmlctx.WithNamespaces(map[string]string{
 		"p":   namespaceFatturaPA,
 		"ds":  namespaceDSig,
@@ -183,12 +202,12 @@ func Parse(doc []byte) (*gobl.Envelope, error) {
 }
 
 // Buffer returns a byte buffer representation of the complete XML document.
-func (d *OrdinaryInvoice) Buffer() (*bytes.Buffer, error) {
+func (d *Invoice) Buffer() (*bytes.Buffer, error) {
 	return marshal(d, xml.Header)
 }
 
 // String converts a struct representation to its string representation
-func (d *OrdinaryInvoice) String() (string, error) {
+func (d *Invoice) String() (string, error) {
 	buf, err := d.Buffer()
 	if err != nil {
 		return "", err
@@ -197,7 +216,7 @@ func (d *OrdinaryInvoice) String() (string, error) {
 }
 
 // Bytes returns the XML document bytes
-func (d *OrdinaryInvoice) Bytes() ([]byte, error) {
+func (d *Invoice) Bytes() ([]byte, error) {
 	buf, err := d.Buffer()
 	if err != nil {
 		return nil, err

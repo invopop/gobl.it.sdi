@@ -106,7 +106,7 @@ if err != nil {
     panic(err)
 }
 
-data, err := doc.Bytes()
+data, err := fatturapa.Bytes(doc)
 if err != nil {
     panic(err)
 }
@@ -116,7 +116,7 @@ if err = os.WriteFile("./test.xml", data, 0644); err != nil {
 }
 ```
 
-`Convert` returns a `Document`: an `*OrdinaryInvoice` for the FPA12 and FPR12 formats, or a `*SimplifiedInvoice` for FSM10, following the invoice's `it-sdi-format` extension.
+`Convert` returns an `*Invoice` for the FPA12 and FPR12 formats, or a `*SimplifiedInvoice` for FSM10, following the invoice's `it-sdi-format` extension. `Bytes` returns the XML of either. If you expect only one format, `ConvertInvoice` and `ConvertSimplifiedInvoice` return that type directly, and an error for an invoice in the other format.
 
 See the following example for signing the XML with a certificate:
 

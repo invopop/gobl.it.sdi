@@ -124,7 +124,7 @@ func TestSimplifiedParse(t *testing.T) {
 			env := test.LoadTestFile(file, test.PathGOBLFatturaPA)
 			want := env.Extract().(*bill.Invoice).Totals.TotalWithTax
 
-			doc, err := fatturapa.Convert(env)
+			doc, err := fatturapa.ConvertSimplifiedInvoice(env)
 			require.NoError(t, err)
 			data, err := doc.Bytes()
 			require.NoError(t, err)

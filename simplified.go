@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"errors"
+	"fmt"
 
 	"github.com/invopop/gobl"
 	sdi "github.com/invopop/gobl.it.sdi/addon"
@@ -70,6 +71,20 @@ type OtherIdentifiers struct {
 	Given   string   `xml:"Nome,omitempty"`
 	Surname string   `xml:"Cognome,omitempty"`
 	Address *Address `xml:"Sede"`
+}
+
+// ConvertSimplifiedInvoice converts an envelope with an invoice in the FSM10
+// format into a FatturaElettronicaSemplificata document.
+func ConvertSimplifiedInvoice(env *gobl.Envelope, opts ...Option) (*SimplifiedInvoice, error) {
+	doc, err := Convert(env, opts...)
+	if err != nil {
+		return nil, err
+	}
+	inv, ok := doc.(*SimplifiedInvoice)
+	if !ok {
+		return nil, fmt.Errorf("expected a simplified invoice, got %T", doc)
+	}
+	return inv, nil
 }
 
 func newSimplifiedInvoice(env *gobl.Envelope, inv *bill.Invoice, config *config) (*SimplifiedInvoice, error) {

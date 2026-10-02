@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -42,16 +41,8 @@ var UpdateOut = flag.Bool("update", false, "Update the example files in test/dat
 
 // ConvertFromGOBL takes the GOBL test data and converts into an ordinary
 // FatturaPA invoice
-func ConvertFromGOBL(env *gobl.Envelope, opts ...fatturapa.Option) (*fatturapa.OrdinaryInvoice, error) {
-	doc, err := fatturapa.Convert(env, opts...)
-	if err != nil {
-		return nil, err
-	}
-	inv, ok := doc.(*fatturapa.OrdinaryInvoice)
-	if !ok {
-		return nil, fmt.Errorf("expected an ordinary invoice, got %T", doc)
-	}
-	return inv, nil
+func ConvertFromGOBL(env *gobl.Envelope, opts ...fatturapa.Option) (*fatturapa.Invoice, error) {
+	return fatturapa.ConvertInvoice(env, opts...)
 }
 
 // ConvertToGOBL takes the XML test data and converts into a GOBL envelope

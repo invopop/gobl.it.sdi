@@ -16,11 +16,44 @@ import (
 
 func convertSimplified(t *testing.T, env *gobl.Envelope) *fatturapa.SimplifiedInvoice {
 	t.Helper()
-	doc, err := fatturapa.Convert(env)
+	inv, err := fatturapa.ConvertSimplifiedInvoice(env)
 	require.NoError(t, err)
-	inv, ok := doc.(*fatturapa.SimplifiedInvoice)
-	require.True(t, ok, "expected a simplified invoice, got %T", doc)
 	return inv
+}
+
+func TestConvertFormats(t *testing.T) {
+	t.Run("ordinary invoice", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
+		doc, err := fatturapa.Convert(env)
+		require.NoError(t, err)
+		assert.IsType(t, &fatturapa.Invoice{}, doc)
+
+		data, err := fatturapa.Bytes(doc)
+		require.NoError(t, err)
+		assert.Contains(t, string(data), "<p:FatturaElettronica ")
+
+		_, err = fatturapa.ConvertSimplifiedInvoice(env)
+		assert.ErrorContains(t, err, "expected a simplified invoice, got *fatturapa.Invoice")
+	})
+
+	t.Run("simplified invoice", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simplified.json", test.PathGOBLFatturaPA)
+		doc, err := fatturapa.Convert(env)
+		require.NoError(t, err)
+		assert.IsType(t, &fatturapa.SimplifiedInvoice{}, doc)
+
+		data, err := fatturapa.Bytes(doc)
+		require.NoError(t, err)
+		assert.Contains(t, string(data), "<p:FatturaElettronicaSemplificata ")
+
+		_, err = fatturapa.ConvertInvoice(env)
+		assert.ErrorContains(t, err, "expected an ordinary invoice, got *fatturapa.SimplifiedInvoice")
+	})
+
+	t.Run("bytes of an unsupported document", func(t *testing.T) {
+		_, err := fatturapa.Bytes("not a document")
+		assert.ErrorContains(t, err, "unsupported document type string")
+	})
 }
 
 func TestSimplifiedConvert(t *testing.T) {
