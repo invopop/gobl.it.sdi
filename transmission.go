@@ -11,6 +11,7 @@ import (
 const (
 	formatoTrasmissioneFPA12 = "FPA12" // B2G
 	formatoTrasmissioneFPR12 = "FPR12" // B2B or B2C
+	formatoTrasmissioneFSM10 = "FSM10" // simplified B2B or B2C
 )
 
 // Invoices sent to Italian individuals or businesses can use 0000000 as the

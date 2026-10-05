@@ -1,0 +1,172 @@
+{
+	"$regime": "IT",
+	"$addons": [
+		"it-sdi-v1"
+	],
+	"$tags": [
+		"simplified"
+	],
+	"uuid": "00000000-0000-0000-0000-000000000000",
+	"type": "credit-note",
+	"code": "NC-17",
+	"issue_date": "2026-09-15",
+	"currency": "EUR",
+	"preceding": [
+		{
+			"issue_date": "2026-09-10",
+			"code": "FS-112",
+			"reason": "Reso prodotti non utilizzati"
+		}
+	],
+	"tax": {
+		"prices_include": "VAT",
+		"ext": {
+			"it-sdi-document-type": "TD08",
+			"it-sdi-format": "FSM10"
+		}
+	},
+	"supplier": {
+		"name": "Farmacia Centrale S.r.l.",
+		"tax_id": {
+			"country": "IT",
+			"code": "12345678903"
+		},
+		"addresses": [
+			{
+				"num": "30",
+				"street": "Via Nazionale",
+				"locality": "Roma",
+				"region": "RM",
+				"code": "00184",
+				"country": "IT"
+			}
+		],
+		"ext": {
+			"it-sdi-fiscal-regime": "RF01"
+		}
+	},
+	"customer": {
+		"name": "Giovanni Rossi",
+		"tax_id": {
+			"country": "IT"
+		},
+		"identities": [
+			{
+				"key": "it-fiscal-code",
+				"code": "RSSGNN60R30H501U"
+			}
+		],
+		"people": [
+			{
+				"name": {
+					"given": "Giovanni",
+					"surname": "Rossi"
+				}
+			}
+		],
+		"addresses": [
+			{
+				"num": "7",
+				"street": "Via Cavour",
+				"locality": "Roma",
+				"region": "RM",
+				"code": "00184",
+				"country": "IT"
+			}
+		]
+	},
+	"lines": [
+		{
+			"i": 1,
+			"quantity": "1",
+			"item": {
+				"name": "Integratore alimentare",
+				"price": "24.40"
+			},
+			"sum": "24.40",
+			"taxes": [
+				{
+					"cat": "VAT",
+					"key": "standard",
+					"percent": "22.00%"
+				}
+			],
+			"total": "24.40"
+		},
+		{
+			"i": 2,
+			"quantity": "1",
+			"item": {
+				"name": "Medicinale da banco",
+				"price": "11.00"
+			},
+			"sum": "11.00",
+			"taxes": [
+				{
+					"cat": "VAT",
+					"key": "standard",
+					"percent": "10.00%"
+				}
+			],
+			"total": "11.00"
+		},
+		{
+			"i": 3,
+			"quantity": "1",
+			"item": {
+				"name": "Prestazione sanitaria",
+				"price": "15.00"
+			},
+			"sum": "15.00",
+			"taxes": [
+				{
+					"cat": "VAT",
+					"key": "exempt",
+					"ext": {
+						"it-sdi-exempt": "N4"
+					}
+				}
+			],
+			"total": "15.00"
+		}
+	],
+	"totals": {
+		"sum": "50.40",
+		"tax_included": "5.40",
+		"total": "45.00",
+		"taxes": {
+			"categories": [
+				{
+					"code": "VAT",
+					"rates": [
+						{
+							"key": "standard",
+							"base": "20.00",
+							"percent": "22.00%",
+							"amount": "4.40"
+						},
+						{
+							"key": "standard",
+							"base": "10.00",
+							"percent": "10.00%",
+							"amount": "1.00"
+						},
+						{
+							"key": "exempt",
+							"ext": {
+								"it-sdi-exempt": "N4"
+							},
+							"base": "15.00",
+							"amount": "0.00"
+						}
+					],
+					"amount": "5.40"
+				}
+			],
+			"sum": "5.40"
+		},
+		"tax": "5.40",
+		"total_with_tax": "50.40",
+		"payable": "50.40"
+	}
+}

@@ -1,0 +1,162 @@
+{
+	"$schema": "https://gobl.org/draft-0/envelope",
+	"head": {
+		"uuid": "01a0f2d9-bbe5-7c01-b3d0-de345d7db34f",
+		"dig": {
+			"alg": "sha256",
+			"val": "c3f27284137da46efd2cafc6428b8a62cc2bf5938fd377d94f69d8880364c68d"
+		}
+	},
+	"doc": {
+		"$schema": "https://gobl.org/draft-0/bill/invoice",
+		"$regime": "IT",
+		"$addons": [
+			"it-sdi-v1"
+		],
+		"$tags": [
+			"simplified"
+		],
+		"uuid": "0190b7a6-6a2c-7000-8f1e-2b6d9a1c3e03",
+		"type": "standard",
+		"series": "SEMP",
+		"code": "003",
+		"issue_date": "2026-09-28",
+		"currency": "EUR",
+		"tax": {
+			"ext": {
+				"it-sdi-document-type": "TD07",
+				"it-sdi-format": "FSM10"
+			}
+		},
+		"supplier": {
+			"name": "Studio Medico Verdi",
+			"tax_id": {
+				"country": "IT",
+				"code": "12345678903"
+			},
+			"addresses": [
+				{
+					"num": "8",
+					"street": "Via Garibaldi",
+					"locality": "Torino",
+					"region": "TO",
+					"code": "10122",
+					"country": "IT"
+				}
+			],
+			"ext": {
+				"it-sdi-fiscal-regime": "RF01"
+			}
+		},
+		"customer": {
+			"tax_id": {
+				"country": "IT"
+			},
+			"identities": [
+				{
+					"key": "it-fiscal-code",
+					"code": "RSSGNN60R30H501U"
+				}
+			],
+			"people": [
+				{
+					"name": {
+						"given": "Giovanni",
+						"surname": "Rossi"
+					}
+				}
+			],
+			"addresses": [
+				{
+					"num": "15",
+					"street": "Via Po",
+					"locality": "Torino",
+					"region": "TO",
+					"code": "10124",
+					"country": "IT"
+				}
+			]
+		},
+		"lines": [
+			{
+				"i": 1,
+				"quantity": "1",
+				"item": {
+					"name": "Visita specialistica",
+					"price": "120.00"
+				},
+				"sum": "120.00",
+				"taxes": [
+					{
+						"cat": "VAT",
+						"key": "exempt",
+						"ext": {
+							"it-sdi-exempt": "N4"
+						}
+					}
+				],
+				"total": "120.00"
+			}
+		],
+		"discounts": [
+			{
+				"i": 1,
+				"reason": "Sconto convenzione",
+				"amount": "10.00",
+				"taxes": [
+					{
+						"cat": "VAT",
+						"key": "exempt",
+						"ext": {
+							"it-sdi-exempt": "N4"
+						}
+					}
+				]
+			}
+		],
+		"charges": [
+			{
+				"i": 1,
+				"key": "stamp-duty",
+				"amount": "2.00",
+				"taxes": [
+					{
+						"cat": "VAT",
+						"key": "exempt",
+						"ext": {
+							"it-sdi-exempt": "N4"
+						}
+					}
+				]
+			}
+		],
+		"totals": {
+			"sum": "120.00",
+			"discount": "10.00",
+			"charge": "2.00",
+			"total": "112.00",
+			"taxes": {
+				"categories": [
+					{
+						"code": "VAT",
+						"rates": [
+							{
+								"key": "exempt",
+								"ext": {
+									"it-sdi-exempt": "N4"
+								},
+								"base": "112.00",
+								"amount": "0.00"
+							}
+						],
+						"amount": "0.00"
+					}
+				],
+				"sum": "0.00"
+			},
+			"tax": "0.00",
+			"total_with_tax": "112.00",
+			"payable": "112.00"
+		}
+	}
+}

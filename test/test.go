@@ -39,13 +39,10 @@ const (
 // UpdateOut is a flag that can be set to update example files in test/data and test/data/out
 var UpdateOut = flag.Bool("update", false, "Update the example files in test/data and test/data/out")
 
-// ConvertFromGOBL takes the GOBL test data and converts into XML
-func ConvertFromGOBL(env *gobl.Envelope, opts ...fatturapa.Option) (*fatturapa.Document, error) {
-	doc, err := fatturapa.Convert(env, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return doc, nil
+// ConvertFromGOBL takes the GOBL test data and converts into an ordinary
+// FatturaPA invoice
+func ConvertFromGOBL(env *gobl.Envelope, opts ...fatturapa.Option) (*fatturapa.Invoice, error) {
+	return fatturapa.ConvertInvoice(env, opts...)
 }
 
 // ConvertToGOBL takes the XML test data and converts into a GOBL envelope
@@ -135,7 +132,18 @@ func LoadTestFile(file string, testPath string) *gobl.Envelope {
 
 // LoadSchema loads a XSD schema for validating XML documents
 func LoadSchema() (*xsd.Schema, error) {
-	schemaPath := filepath.Join("schemas", "FatturaPA_v1.2.2.xsd")
+	schemaPath := filepath.Join("schemas", "FatturaPA_v1.2.3.xsd")
+	schema, err := xsd.ParseFromFile(schemaPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return schema, nil
+}
+
+// LoadSimplifiedSchema loads the XSD schema for validating simplified invoices
+func LoadSimplifiedSchema() (*xsd.Schema, error) {
+	schemaPath := filepath.Join("schemas", "SVFSM10_v1.0.2.xsd")
 	schema, err := xsd.ParseFromFile(schemaPath)
 	if err != nil {
 		return nil, err

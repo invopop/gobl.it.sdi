@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<p:FatturaElettronicaSemplificata xmlns:p="http://ivaservizi.agenziaentrate.gov.it/docs/xsd/fatture/v1.0" versione="FSM10">
+	<FatturaElettronicaHeader>
+		<DatiTrasmissione>
+			<IdTrasmittente>
+				<IdPaese>IT</IdPaese>
+				<IdCodice>01234567890</IdCodice>
+			</IdTrasmittente>
+			<ProgressivoInvio>00042</ProgressivoInvio>
+			<FormatoTrasmissione>FSM10</FormatoTrasmissione>
+			<CodiceDestinatario>0000000</CodiceDestinatario>
+		</DatiTrasmissione>
+		<CedentePrestatore>
+			<IdFiscaleIVA>
+				<IdPaese>IT</IdPaese>
+				<IdCodice>12345678903</IdCodice>
+			</IdFiscaleIVA>
+			<Denominazione>Farmacia Centrale S.r.l.</Denominazione>
+			<Sede>
+				<Indirizzo>Via Nazionale</Indirizzo>
+				<NumeroCivico>30</NumeroCivico>
+				<CAP>00184</CAP>
+				<Comune>Roma</Comune>
+				<Provincia>RM</Provincia>
+				<Nazione>IT</Nazione>
+			</Sede>
+			<RegimeFiscale>RF01</RegimeFiscale>
+		</CedentePrestatore>
+		<CessionarioCommittente>
+			<IdentificativiFiscali>
+				<CodiceFiscale>RSSGNN60R30H501U</CodiceFiscale>
+			</IdentificativiFiscali>
+			<AltriDatiIdentificativi>
+				<Nome>Giovanni</Nome>
+				<Cognome>Rossi</Cognome>
+				<Sede>
+					<Indirizzo>Via Cavour</Indirizzo>
+					<NumeroCivico>7</NumeroCivico>
+					<CAP>00184</CAP>
+					<Comune>Roma</Comune>
+					<Provincia>RM</Provincia>
+					<Nazione>IT</Nazione>
+				</Sede>
+			</AltriDatiIdentificativi>
+		</CessionarioCommittente>
+	</FatturaElettronicaHeader>
+	<FatturaElettronicaBody>
+		<DatiGenerali>
+			<DatiGeneraliDocumento>
+				<TipoDocumento>TD08</TipoDocumento>
+				<Divisa>EUR</Divisa>
+				<Data>2026-09-15</Data>
+				<Numero>NC-17</Numero>
+			</DatiGeneraliDocumento>
+			<DatiFatturaRettificata>
+				<NumeroFR>FS-112</NumeroFR>
+				<DataFR>2026-09-10</DataFR>
+				<ElementiRettificati>Reso prodotti non utilizzati</ElementiRettificati>
+			</DatiFatturaRettificata>
+		</DatiGenerali>
+		<DatiBeniServizi>
+			<Descrizione>Integratore alimentare</Descrizione>
+			<Importo>24.40</Importo>
+			<DatiIVA>
+				<Imposta>4.40</Imposta>
+			</DatiIVA>
+		</DatiBeniServizi>
+		<DatiBeniServizi>
+			<Descrizione>Medicinale da banco</Descrizione>
+			<Importo>11.00</Importo>
+			<DatiIVA>
+				<Imposta>1.00</Imposta>
+			</DatiIVA>
+		</DatiBeniServizi>
+		<DatiBeniServizi>
+			<Descrizione>Prestazione sanitaria</Descrizione>
+			<Importo>15.00</Importo>
+			<DatiIVA>
+				<Aliquota>0.00</Aliquota>
+			</DatiIVA>
+			<Natura>N4</Natura>
+			<RiferimentoNormativo>Esenti</RiferimentoNormativo>
+		</DatiBeniServizi>
+	</FatturaElettronicaBody>
+</p:FatturaElettronicaSemplificata>
