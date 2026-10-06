@@ -84,6 +84,18 @@ func TestDocumentNumberLength(t *testing.T) {
 		}
 	})
 
+	t.Run("despatch item reference over 20 characters", func(t *testing.T) {
+		inv := testInvoiceStandard(t)
+		inv.SetTags(sdi.TagDeferred)
+		inv.Ordering = &bill.Ordering{Despatch: []*org.DocumentRef{{
+			Code:       "DDT-1",
+			IssueDate:  cal.NewDate(2022, 6, 1),
+			Identities: []*org.Identity{{Key: org.IdentityKeyItem, Code: codeOf21}},
+		}}}
+		require.NoError(t, inv.Calculate())
+		assert.NoError(t, rules.Validate(inv))
+	})
+
 	t.Run("despatch number over 20 characters", func(t *testing.T) {
 		inv := testInvoiceStandard(t)
 		inv.SetTags(sdi.TagDeferred)

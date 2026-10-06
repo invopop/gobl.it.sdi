@@ -70,11 +70,17 @@ func orderingRefsFit(val any) bool {
 	if !ok || o == nil {
 		return true
 	}
-	for _, refs := range [][]*org.DocumentRef{o.Purchases, o.Contracts, o.Tender, o.Receiving, o.Despatch} {
+	for _, refs := range [][]*org.DocumentRef{o.Purchases, o.Contracts, o.Tender, o.Receiving} {
 		for _, ref := range refs {
 			if !documentRefFits(ref) {
 				return false
 			}
+		}
+	}
+	// A despatch reference (DatiDDT) carries only its number, not an item reference.
+	for _, ref := range o.Despatch {
+		if ref != nil && !fitsString20(ref.Series.Join(ref.Code)) {
+			return false
 		}
 	}
 	return true
