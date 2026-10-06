@@ -78,6 +78,9 @@ func billInvoiceRules() *rules.Set {
 			rules.Assert("58", "supplier name must be at most 80 characters",
 				is.Func("name length", partyNameFits),
 			),
+			rules.Assert("61", "supplier person given name and surname must be at most 60 characters each",
+				is.Func("person name length", partyPersonNameFits),
+			),
 			rules.Field("addresses",
 				rules.Assert("04", "supplier addresses are required", is.Present),
 			),
@@ -143,6 +146,11 @@ func billInvoiceRules() *rules.Set {
 					rules.Assert("12", "customer addresses are required", is.Present),
 				),
 				rules.Assert("52", "customer person title must be 2 to 10 printable ASCII characters",
+					is.Func("person title", partyPersonTitleFits),
+				),
+			),
+			rules.Field("supplier",
+				rules.Assert("62", "supplier person title must be 2 to 10 printable ASCII characters",
 					is.Func("person title", partyPersonTitleFits),
 				),
 			),
@@ -380,14 +388,19 @@ func invoiceIssuerHasTaxIDCodeOrFiscalCode(val any) bool {
 // trailing space.
 var titlePattern = regexp.MustCompile(`^[\x21-\x7E][\x20-\x7E]{0,8}[\x21-\x7E]$`)
 
-// anagraficaPersonName returns the name the conversion writes for a party with
-// no name of its own: its first person's.
+// anagraficaPersonName returns the name the conversion writes as Nome and
+// Cognome: the first person's, when the party is named after them or has no
+// name of its own.
 func anagraficaPersonName(val any) *org.Name {
 	p, ok := val.(*org.Party)
-	if !ok || p == nil || p.Name != "" || len(p.People) == 0 {
+	if !ok || p == nil || len(p.People) == 0 || p.People[0].Name == nil {
 		return nil
 	}
-	return p.People[0].Name
+	n := p.People[0].Name
+	if p.Name != "" && p.Name != n.Given+" "+n.Surname {
+		return nil
+	}
+	return n
 }
 
 func partyPersonHasFullName(val any) bool {

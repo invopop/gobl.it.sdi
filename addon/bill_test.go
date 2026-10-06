@@ -209,6 +209,33 @@ func TestInvoiceNormalization(t *testing.T) {
 }
 
 func TestSupplierValidation(t *testing.T) {
+	t.Run("supplier named after its person with a short title", func(t *testing.T) {
+		inv := testInvoiceStandard(t)
+		inv.Supplier.Name = "Mario Rossi"
+		inv.Supplier.People = []*org.Person{{Name: &org.Name{Prefix: "Dott.", Given: "Mario", Surname: "Rossi"}}}
+		require.NoError(t, inv.Calculate())
+		assert.NoError(t, rules.Validate(inv))
+	})
+
+	t.Run("supplier named after its person with a long title", func(t *testing.T) {
+		inv := testInvoiceStandard(t)
+		inv.Supplier.Name = "Mario Rossi"
+		inv.Supplier.People = []*org.Person{{Name: &org.Name{Prefix: "Dottore Commercialista", Given: "Mario", Surname: "Rossi"}}}
+		require.NoError(t, inv.Calculate())
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "supplier person title must be 2 to 10 printable ASCII characters")
+	})
+
+	t.Run("supplier named after its person with a long given name", func(t *testing.T) {
+		inv := testInvoiceStandard(t)
+		given := strings.Repeat("M", 61)
+		inv.Supplier.Name = given + " Rossi"
+		inv.Supplier.People = []*org.Person{{Name: &org.Name{Given: given, Surname: "Rossi"}}}
+		require.NoError(t, inv.Calculate())
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "supplier person given name and surname must be at most 60 characters each")
+	})
+
 	t.Run("supplier name longer than 80 characters", func(t *testing.T) {
 		inv := testInvoiceStandard(t)
 		inv.Supplier.Name = strings.Repeat("S", 81)
