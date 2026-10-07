@@ -260,7 +260,7 @@ func billInvoiceRules() *rules.Set {
 				is.Func("third-party issuer named", invoiceThirdPartyIssuerIsNamed),
 			),
 		),
-		rules.Assert("49", "ordering issuer must be removed: the customer issued this invoice (issuer type CC)",
+		rules.Assert("49", "ordering issuer must be removed: the customer issued this invoice (issuer type CC, always set for TD16-TD20, TD22, TD23, TD28)",
 			is.Func("customer issuer names no third party", invoiceCustomerIssuerNamesNoThirdParty),
 		),
 		rules.Assert("63", "ordering issuer must not be the customer: remove it and set the issuer type to CC",

@@ -1188,7 +1188,7 @@ func TestOrderingValidation(t *testing.T) {
 		}
 		require.NoError(t, inv.Calculate())
 		err := rules.Validate(inv)
-		assert.ErrorContains(t, err, "ordering issuer must be removed: the customer issued this invoice (issuer type CC)")
+		assert.ErrorContains(t, err, "ordering issuer must be removed: the customer issued this invoice (issuer type CC, always set for TD16-TD20, TD22, TD23, TD28)")
 	})
 
 	t.Run("issuer with the customer's tax ID", func(t *testing.T) {
@@ -1224,6 +1224,22 @@ func TestOrderingValidation(t *testing.T) {
 		require.NoError(t, inv.Calculate())
 		err := rules.Validate(inv)
 		assert.ErrorContains(t, err, "ordering issuer must not be the customer")
+	})
+
+	t.Run("TD17 with an explicit TZ and an issuer", func(t *testing.T) {
+		inv := testInvoiceStandard(t)
+		inv.SetTags(tax.TagSelfBilled, sdi.TagImport)
+		inv.Tax.Ext = inv.Tax.Ext.Set(sdi.ExtKeyIssuerType, sdi.ExtCodeIssuerTypeThirdParty)
+		inv.Ordering = &bill.Ordering{
+			Issuer: &org.Party{
+				Name:  "Fatturazione Terzi S.r.l.",
+				TaxID: &tax.Identity{Country: "IT", Code: "01234567897"},
+			},
+		}
+		require.NoError(t, inv.Calculate())
+		assert.Equal(t, "TD17", inv.Tax.Ext.Get(sdi.ExtKeyDocumentType).String())
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "ordering issuer must be removed: the customer issued this invoice (issuer type CC, always set for TD16-TD20, TD22, TD23, TD28)")
 	})
 
 	t.Run("despatch with deferred tag and valid additional data", func(t *testing.T) {

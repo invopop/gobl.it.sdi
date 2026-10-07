@@ -1139,9 +1139,16 @@ var extensions = []*cbc.Definition{
 				When you name a third party as the ordering ~issuer~, because that party
 				issues the invoice on the supplier's behalf, the addon sets ~TZ~.
 
-				Set ~CC~ yourself when the customer compiled the invoice. A ~CC~ invoice
-				cannot also name an ordering ~issuer~, because FatturaPA keeps the
-				third-party block for a third party acting for the supplier.
+				When your tags select a document the customer issues, the addon sets
+				~CC~ and replaces any value you gave: TD16 to TD20, TD22, TD23 and TD28.
+				On these the customer sends the document to SDI and the supplier block
+				names the seller. TD21 and TD27 stay unset, because there the issuer is
+				both supplier and customer. For any other invoice the customer issued,
+				set ~CC~ yourself.
+
+				A ~CC~ invoice cannot also name an ordering ~issuer~, because FatturaPA
+				keeps ~TerzoIntermediarioOSoggettoEmittente~ for a third party acting for
+				the supplier.
 			`),
 		},
 		Values: []*cbc.Definition{
