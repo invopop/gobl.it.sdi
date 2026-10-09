@@ -59,8 +59,11 @@ func documentRefFits(val any) bool {
 	if !fitsString20(ref.Series.Join(ref.Code)) {
 		return false
 	}
-	if id := org.IdentityForKey(ref.Identities, org.IdentityKeyItem); id != nil {
-		return fitsString20(id.Code)
+	// The converter writes the last item identity, so all of them must fit.
+	for _, id := range ref.Identities {
+		if id != nil && id.Key == org.IdentityKeyItem && !fitsString20(id.Code) {
+			return false
+		}
 	}
 	return true
 }

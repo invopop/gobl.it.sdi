@@ -70,6 +70,19 @@ func TestDocumentNumberLength(t *testing.T) {
 		assert.ErrorContains(t, rules.Validate(inv), "preceding document number and item reference must be 20 ASCII characters or fewer")
 	})
 
+	t.Run("second item reference over 20 characters", func(t *testing.T) {
+		inv := testInvoiceStandard(t)
+		inv.Preceding = []*org.DocumentRef{{
+			Code: "FT-1",
+			Identities: []*org.Identity{
+				{Key: org.IdentityKeyItem, Code: "1"},
+				{Key: org.IdentityKeyItem, Code: codeOf21},
+			},
+		}}
+		require.NoError(t, inv.Calculate())
+		assert.ErrorContains(t, rules.Validate(inv), "preceding document number and item reference must be 20 ASCII characters or fewer")
+	})
+
 	t.Run("ordering number over 20 characters", func(t *testing.T) {
 		for name, ordering := range map[string]*bill.Ordering{
 			"purchase":  {Purchases: []*org.DocumentRef{{Code: codeOf21}}},
