@@ -18,6 +18,7 @@ const (
 	ExtKeyPaymentMeans cbc.Key = "it-sdi-payment-means"
 	ExtKeyVATLiability cbc.Key = "it-sdi-vat-liability"
 	ExtKeyFundType     cbc.Key = "it-sdi-fund-type"
+	ExtKeyIssuerType   cbc.Key = "it-sdi-issuer-type"
 
 	ExtKeyLiquidationState cbc.Key = "it-sdi-liquidation-state"
 	ExtKeyShareholderState cbc.Key = "it-sdi-shareholder-state"
@@ -26,6 +27,13 @@ const (
 	// line: either the code SDI emits for the event (RC/NS/MC/AT/DT) or the
 	// recipient response resolved from a Notifica Esito (EC01/EC02).
 	ExtKeyNotification cbc.Key = "it-sdi-notification"
+)
+
+// Issuer type codes used to identify who issued the invoice when it was not
+// the supplier.
+const (
+	ExtCodeIssuerTypeCustomer   cbc.Code = "CC" // Cessionario / Committente
+	ExtCodeIssuerTypeThirdParty cbc.Code = "TZ" // Terzo
 )
 
 var extensions = []*cbc.Definition{
@@ -1103,6 +1111,59 @@ var extensions = []*cbc.Definition{
 				Name: i18n.String{
 					i18n.EN: "National Social Security Institute (INPS)",
 					i18n.IT: "Istituto nazionale della previdenza sociale (INPS)",
+				},
+			},
+		},
+	},
+	{
+		Key: ExtKeyIssuerType,
+		Name: i18n.String{
+			i18n.EN: "Issuer Type",
+			i18n.IT: "Soggetto Emittente",
+		},
+		Sources: []*cbc.Source{
+			{
+				Title: i18n.String{
+					i18n.EN: "FatturaPA - Filling Guide",
+					i18n.IT: "Guida alla compilazione della fattura elettronica",
+				},
+				URL: "https://www.agenziaentrate.gov.it/portale/documents/20143/451259/Guida_compilazione-FE-Esterometro-V_1.9_2024-03-05.pdf",
+			},
+		},
+		Desc: i18n.String{
+			i18n.EN: here.Doc(`
+				Says who issued the invoice when it was not the supplier. FatturaPA
+				requires this in the ~SoggettoEmittente~ field whenever someone other
+				than the supplier issues the document (article 21 of DPR 633/1972).
+
+				When you name a third party as the ordering ~issuer~, because that party
+				issues the invoice on the supplier's behalf, the addon sets ~TZ~.
+
+				When your tags select a document the customer issues, the addon sets
+				~CC~ and replaces any value you gave: TD16 to TD20, TD22, TD23 and TD28.
+				On these the customer sends the document to SDI and the supplier block
+				names the seller. TD21 and TD27 stay unset, because there the issuer is
+				both supplier and customer. For any other invoice the customer issued,
+				set ~CC~ yourself.
+
+				A ~CC~ invoice cannot also name an ordering ~issuer~, because FatturaPA
+				keeps ~TerzoIntermediarioOSoggettoEmittente~ for a third party acting for
+				the supplier.
+			`),
+		},
+		Values: []*cbc.Definition{
+			{
+				Code: ExtCodeIssuerTypeCustomer,
+				Name: i18n.String{
+					i18n.EN: "Issued by Customer",
+					i18n.IT: "Emessa dal cessionario / committente",
+				},
+			},
+			{
+				Code: ExtCodeIssuerTypeThirdParty,
+				Name: i18n.String{
+					i18n.EN: "Issued by Third Party",
+					i18n.IT: "Emessa da un soggetto terzo",
 				},
 			},
 		},

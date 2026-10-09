@@ -268,6 +268,7 @@ var invoiceScenarios = &tax.ScenarioSet{
 				i18n.EN: "Self-billed for self consumption or for free transfer without recourse",
 				i18n.IT: "Fattura per autoconsumo o per cessioni gratuite senza rivalsa",
 			},
+			// No issuer type: the issuer is both supplier and customer.
 			Ext: tax.ExtensionsOf(cbc.CodeMap{
 				ExtKeyDocumentType: "TD27", // order is important
 			}),
@@ -281,6 +282,7 @@ var invoiceScenarios = &tax.ScenarioSet{
 			},
 			Ext: tax.ExtensionsOf(cbc.CodeMap{
 				ExtKeyDocumentType: "TD16",
+				ExtKeyIssuerType:   ExtCodeIssuerTypeCustomer,
 			}),
 		},
 		{
@@ -292,6 +294,7 @@ var invoiceScenarios = &tax.ScenarioSet{
 			},
 			Ext: tax.ExtensionsOf(cbc.CodeMap{
 				ExtKeyDocumentType: "TD17",
+				ExtKeyIssuerType:   ExtCodeIssuerTypeCustomer,
 			}),
 		},
 		{
@@ -303,6 +306,7 @@ var invoiceScenarios = &tax.ScenarioSet{
 			},
 			Ext: tax.ExtensionsOf(cbc.CodeMap{
 				ExtKeyDocumentType: "TD18",
+				ExtKeyIssuerType:   ExtCodeIssuerTypeCustomer,
 			}),
 		},
 		{
@@ -314,6 +318,7 @@ var invoiceScenarios = &tax.ScenarioSet{
 			},
 			Ext: tax.ExtensionsOf(cbc.CodeMap{
 				ExtKeyDocumentType: "TD19",
+				ExtKeyIssuerType:   ExtCodeIssuerTypeCustomer,
 			}),
 		},
 		{
@@ -325,6 +330,7 @@ var invoiceScenarios = &tax.ScenarioSet{
 			},
 			Ext: tax.ExtensionsOf(cbc.CodeMap{
 				ExtKeyDocumentType: "TD20",
+				ExtKeyIssuerType:   ExtCodeIssuerTypeCustomer,
 			}),
 		},
 		{
@@ -334,6 +340,7 @@ var invoiceScenarios = &tax.ScenarioSet{
 				i18n.EN: "Self-billed invoice when ceiling exceeded",
 				i18n.IT: "Autofattura per splafonamento",
 			},
+			// No issuer type: the issuer is both supplier and customer.
 			Ext: tax.ExtensionsOf(cbc.CodeMap{
 				ExtKeyDocumentType: "TD21",
 			}),
@@ -347,6 +354,7 @@ var invoiceScenarios = &tax.ScenarioSet{
 			},
 			Ext: tax.ExtensionsOf(cbc.CodeMap{
 				ExtKeyDocumentType: "TD22",
+				ExtKeyIssuerType:   ExtCodeIssuerTypeCustomer,
 			}),
 		},
 		{
@@ -358,6 +366,7 @@ var invoiceScenarios = &tax.ScenarioSet{
 			},
 			Ext: tax.ExtensionsOf(cbc.CodeMap{
 				ExtKeyDocumentType: "TD23",
+				ExtKeyIssuerType:   ExtCodeIssuerTypeCustomer,
 			}),
 		},
 		{
@@ -402,6 +411,7 @@ var invoiceScenarios = &tax.ScenarioSet{
 			},
 			Ext: tax.ExtensionsOf(cbc.CodeMap{
 				ExtKeyDocumentType: "TD28",
+				ExtKeyIssuerType:   ExtCodeIssuerTypeCustomer,
 			}),
 		},
 	},

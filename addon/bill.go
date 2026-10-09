@@ -2,6 +2,9 @@ package sdi
 
 import (
 	"fmt"
+	"regexp"
+	"slices"
+	"unicode/utf8"
 
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/cbc"
@@ -18,6 +21,18 @@ var partyHasTaxIDCode = org.PartyHasTaxIDCode()
 
 func normalizeInvoice(inv *bill.Invoice) {
 	normalizeSupplier(inv.Supplier)
+	normalizeIssuerType(inv)
+}
+
+// normalizeIssuerType sets TZ when the invoice names a third-party issuer and
+// no issuer type is set.
+func normalizeIssuerType(inv *bill.Invoice) {
+	if inv.Tax.GetExt(ExtKeyIssuerType) != "" || inv.Ordering == nil || inv.Ordering.Issuer == nil {
+		return
+	}
+	inv.Tax = inv.Tax.MergeExtensions(tax.ExtensionsOf(cbc.CodeMap{
+		ExtKeyIssuerType: ExtCodeIssuerTypeThirdParty,
+	}))
 }
 
 func normalizeSupplier(party *org.Party) {
@@ -191,6 +206,66 @@ func billInvoiceRules() *rules.Set {
 			),
 		),
 		simplifiedInvoiceRules(),
+		// Issuer: a third party issuing the invoice must be identified and named
+		rules.Assert("44", "issuer tax ID code or fiscal code is required",
+			is.Func("issuer identification check", invoiceIssuerHasTaxIDCodeOrFiscalCode),
+		),
+		rules.Field("ordering",
+			rules.Field("issuer",
+				rules.Field("name",
+					rules.Assert("45", "issuer name must use Latin-1 characters",
+						is.FuncError("latin1", validateLatin1String),
+					),
+				),
+				// The issuer's code is written as given, so it has to fit IdCodice
+				rules.Field("tax_id",
+					rules.Field("code",
+						rules.Assert("64", "issuer tax ID code must be at most 28 characters",
+							is.RuneLength(0, 28),
+						),
+					),
+				),
+				rules.Assert("53", "issuer person needs a given name and a surname when the issuer has no name",
+					is.Func("person full name", partyPersonHasFullName),
+				),
+				rules.Assert("54", "issuer person name must use Latin-1 characters",
+					is.Func("person latin1", partyPersonNameIsLatin1),
+				),
+				rules.Assert("55", "issuer person title must be 2 to 10 printable ASCII characters",
+					is.Func("person title", partyPersonTitleFits),
+				),
+				rules.Assert("56", "issuer name must be at most 80 characters",
+					is.Func("name length", partyNameFits),
+				),
+				rules.Assert("57", "issuer person given name and surname must be at most 60 characters each",
+					is.Func("person name length", partyPersonNameFits),
+				),
+			),
+		),
+		rules.Assert("46", "issuer name or people is required",
+			is.Func("issuer name check", invoiceIssuerHasNameOrPeople),
+		),
+		rules.Field("tax",
+			rules.Field("ext",
+				rules.Assert("47",
+					fmt.Sprintf("tax extension '%s' must have a valid code", ExtKeyIssuerType),
+					tax.ExtensionHasValidCode(ExtKeyIssuerType),
+				),
+			),
+		),
+		// FatturaPA keeps the third-party block for a third party acting for the
+		// supplier; the simplified format has no such block.
+		rules.When(is.Not(is.Func("simplified invoice", invoiceIsSimplified)),
+			rules.Assert("48", "issuer is required when the issuer type is TZ",
+				is.Func("third-party issuer named", invoiceThirdPartyIssuerIsNamed),
+			),
+		),
+		rules.Assert("49", "ordering issuer must be removed: the customer issued this invoice (issuer type CC, always set for TD16-TD20, TD22, TD23, TD28)",
+			is.Func("customer issuer names no third party", invoiceCustomerIssuerNamesNoThirdParty),
+		),
+		rules.Assert("63", "ordering issuer must not be the customer: remove it and set the issuer type to CC",
+			is.Func("ordering issuer is not the customer", invoiceIssuerIsNotCustomer),
+		),
 	)
 }
 
@@ -272,6 +347,97 @@ func invoiceCustomerHasFiscalCodeIdentity(val any) bool {
 		return false
 	}
 	return org.IdentityForKey(ids, it.IdentityKeyFiscalCode) != nil
+}
+
+func invoiceIssuerHasTaxIDCodeOrFiscalCode(val any) bool {
+	inv, ok := val.(*bill.Invoice)
+	if !ok || inv == nil || inv.Ordering == nil || inv.Ordering.Issuer == nil {
+		return true
+	}
+	return partyHasTaxIDCode.Check(inv.Ordering.Issuer) || hasFiscalCode(inv.Ordering.Issuer)
+}
+
+// titlePattern matches the FatturaPA TitoloType after the schema collapses
+// whitespace: 2 to 10 printable ASCII characters, none of them a leading or
+// trailing space.
+var titlePattern = regexp.MustCompile(`^[\x21-\x7E][\x20-\x7E]{0,8}[\x21-\x7E]$`)
+
+// anagraficaPersonName returns the name the conversion writes for a party with
+// no name of its own: its first person's.
+func anagraficaPersonName(val any) *org.Name {
+	p, ok := val.(*org.Party)
+	if !ok || p == nil || p.Name != "" || len(p.People) == 0 {
+		return nil
+	}
+	return p.People[0].Name
+}
+
+func partyPersonHasFullName(val any) bool {
+	n := anagraficaPersonName(val)
+	return n == nil || (n.Given != "" && n.Surname != "")
+}
+
+func partyPersonNameIsLatin1(val any) bool {
+	n := anagraficaPersonName(val)
+	return n == nil || (validateLatin1String(n.Given) == nil && validateLatin1String(n.Surname) == nil)
+}
+
+func partyPersonTitleFits(val any) bool {
+	n := anagraficaPersonName(val)
+	return n == nil || n.Prefix == "" || titlePattern.MatchString(n.Prefix)
+}
+
+func partyPersonNameFits(val any) bool {
+	n := anagraficaPersonName(val)
+	return n == nil || (utf8.RuneCountInString(n.Given) <= 60 && utf8.RuneCountInString(n.Surname) <= 60)
+}
+
+// partyNameFits checks the name written as Denominazione, which takes up to 80
+// characters.
+func partyNameFits(val any) bool {
+	p, ok := val.(*org.Party)
+	if !ok || p == nil || anagraficaPersonName(p) != nil {
+		return true
+	}
+	return utf8.RuneCountInString(p.Name) <= 80
+}
+
+func invoiceIssuerHasNameOrPeople(val any) bool {
+	inv, ok := val.(*bill.Invoice)
+	if !ok || inv == nil || inv.Ordering == nil || inv.Ordering.Issuer == nil {
+		return true
+	}
+	return inv.Ordering.Issuer.Name != "" || len(inv.Ordering.Issuer.People) > 0
+}
+
+func invoiceThirdPartyIssuerIsNamed(val any) bool {
+	inv, ok := val.(*bill.Invoice)
+	if !ok || inv == nil || inv.Tax.GetExt(ExtKeyIssuerType) != ExtCodeIssuerTypeThirdParty {
+		return true
+	}
+	return inv.Ordering != nil && inv.Ordering.Issuer != nil
+}
+
+func invoiceCustomerIssuerNamesNoThirdParty(val any) bool {
+	inv, ok := val.(*bill.Invoice)
+	if !ok || inv == nil || inv.Tax.GetExt(ExtKeyIssuerType) != ExtCodeIssuerTypeCustomer {
+		return true
+	}
+	return inv.Ordering == nil || inv.Ordering.Issuer == nil
+}
+
+func invoiceIssuerIsNotCustomer(val any) bool {
+	inv, ok := val.(*bill.Invoice)
+	if !ok || inv == nil || inv.Ordering == nil || inv.Ordering.Issuer == nil || inv.Customer == nil {
+		return true
+	}
+	customerIDs := partyFiscalIDs(inv.Customer)
+	for _, id := range partyFiscalIDs(inv.Ordering.Issuer) {
+		if slices.Contains(customerIDs, id) {
+			return false
+		}
+	}
+	return true
 }
 
 func invoiceHasDeferredTag(val any) bool {
