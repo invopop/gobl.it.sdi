@@ -2,6 +2,7 @@ package sdi
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/cbc"
@@ -15,6 +16,9 @@ import (
 
 // partyHasTaxIDCode is reused by the invoice guards below.
 var partyHasTaxIDCode = org.PartyHasTaxIDCode()
+
+// string20 matches FatturaPA's String20Type: up to 20 Basic Latin characters.
+var string20 = regexp.MustCompile(`^[[:ascii:]]{0,20}$`)
 
 func normalizeInvoice(inv *bill.Invoice) {
 	normalizeSupplier(inv.Supplier)
@@ -42,6 +46,9 @@ func normalizeSupplier(party *org.Party) {
 func billInvoiceRules() *rules.Set {
 	return rules.For(new(bill.Invoice),
 		rules.Assert("22", "invoice must be in EUR or provide exchange rate for conversion", currency.CanConvertTo(currency.EUR)),
+		rules.Assert("44", "invoice number (series and code) must be 20 ASCII characters or fewer",
+			is.Func("invoice number fits", invoiceNumberFits),
+		),
 		rules.Field("tax",
 			rules.Assert("01", "tax is required", is.Present),
 			rules.Field("ext",
@@ -73,6 +80,9 @@ func billInvoiceRules() *rules.Set {
 				rules.Field("entry",
 					rules.Assert("06", "supplier registration entry is required when registration is present",
 						is.Present,
+					),
+					rules.Assert("47", "supplier registration entry must be 20 ASCII characters or fewer",
+						is.MatchesRegexp(string20),
 					),
 				),
 				rules.Field("office",
@@ -106,8 +116,8 @@ func billInvoiceRules() *rules.Set {
 				rules.Assert("11", "customer tax ID is required", is.Present),
 			),
 		),
-		// A simplified invoice may identify the customer by tax code alone
 		rules.When(is.Not(is.Func("simplified invoice", invoiceIsSimplified)),
+			// A simplified invoice may identify the customer by tax code alone
 			rules.Field("customer",
 				rules.Field("addresses",
 					rules.Assert("12", "customer addresses are required", is.Present),
@@ -120,6 +130,19 @@ func billInvoiceRules() *rules.Set {
 			// Customer people required when name is empty
 			rules.Assert("14", "customer people are required when name is empty",
 				is.Func("customer people check", invoiceCustomerHasPeopleOrName),
+			),
+			// The simplified format carries no ordering documents or item references
+			rules.Field("preceding",
+				rules.Each(
+					rules.Assert("45", "preceding document number and item reference must be 20 ASCII characters or fewer",
+						is.Func("document reference fits", documentRefFits),
+					),
+				),
+			),
+			rules.Field("ordering",
+				rules.Assert("46", "ordering document numbers and item references must be 20 ASCII characters or fewer",
+					is.Func("ordering references fit", orderingRefsFit),
+				),
 			),
 		),
 		// Customer tax_id code required for Italian parties without fiscal code
@@ -209,6 +232,11 @@ func billChargeRules() *rules.Set {
 			rules.Field("taxes",
 				rules.Assert("03", "fund contribution charge must have VAT tax category",
 					tax.SetHasCategory(tax.CategoryVAT),
+				),
+			),
+			rules.Field("code",
+				rules.Assert("04", "fund contribution charge code must be 20 ASCII characters or fewer",
+					is.MatchesRegexp(string20),
 				),
 			),
 		),
@@ -323,4 +351,59 @@ func isItalianParty(party *org.Party) bool {
 		return false
 	}
 	return party.TaxID.Country.In("IT")
+}
+
+func invoiceNumberFits(val any) bool {
+	inv, ok := val.(*bill.Invoice)
+	if !ok || inv == nil {
+		return true
+	}
+	return string20.MatchString(inv.Series.Join(inv.Code).String())
+}
+
+func documentNumberFits(val any) bool {
+	ref, ok := val.(*org.DocumentRef)
+	if !ok || ref == nil {
+		return true
+	}
+	return string20.MatchString(ref.Series.Join(ref.Code).String())
+}
+
+func documentRefFits(val any) bool {
+	ref, ok := val.(*org.DocumentRef)
+	if !ok || ref == nil {
+		return true
+	}
+	if !documentNumberFits(ref) {
+		return false
+	}
+	// The converter writes only the last item identity as NumItem.
+	var item *org.Identity
+	for _, id := range ref.Identities {
+		if id != nil && id.Key == org.IdentityKeyItem {
+			item = id
+		}
+	}
+	return item == nil || string20.MatchString(item.Code.String())
+}
+
+func orderingRefsFit(val any) bool {
+	o, ok := val.(*bill.Ordering)
+	if !ok || o == nil {
+		return true
+	}
+	for _, refs := range [][]*org.DocumentRef{o.Purchases, o.Contracts, o.Tender, o.Receiving} {
+		for _, ref := range refs {
+			if !documentRefFits(ref) {
+				return false
+			}
+		}
+	}
+	// A despatch reference (DatiDDT) carries only its number, not an item reference.
+	for _, ref := range o.Despatch {
+		if !documentNumberFits(ref) {
+			return false
+		}
+	}
+	return true
 }
