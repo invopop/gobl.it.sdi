@@ -19,16 +19,19 @@ func documentNumberRules() rules.Def {
 		rules.Assert("44", "invoice number (series and code) must be 20 ASCII characters or fewer",
 			is.Func("invoice number fits", invoiceNumberFits),
 		),
-		rules.Field("preceding",
-			rules.Each(
-				rules.Assert("45", "preceding document number and item reference must be 20 ASCII characters or fewer",
-					is.Func("document reference fits", documentRefFits),
+		// The simplified format carries no ordering documents or item references.
+		rules.When(is.Not(is.Func("simplified invoice", invoiceIsSimplified)),
+			rules.Field("preceding",
+				rules.Each(
+					rules.Assert("45", "preceding document number and item reference must be 20 ASCII characters or fewer",
+						is.Func("document reference fits", documentRefFits),
+					),
 				),
 			),
-		),
-		rules.Field("ordering",
-			rules.Assert("46", "ordering document numbers and item references must be 20 ASCII characters or fewer",
-				is.Func("ordering references fit", orderingRefsFit),
+			rules.Field("ordering",
+				rules.Assert("46", "ordering document numbers and item references must be 20 ASCII characters or fewer",
+					is.Func("ordering references fit", orderingRefsFit),
+				),
 			),
 		),
 		rules.Field("supplier",
@@ -51,12 +54,20 @@ func invoiceNumberFits(val any) bool {
 	return fitsString20(inv.Series.Join(inv.Code))
 }
 
+func documentNumberFits(val any) bool {
+	ref, ok := val.(*org.DocumentRef)
+	if !ok || ref == nil {
+		return true
+	}
+	return fitsString20(ref.Series.Join(ref.Code))
+}
+
 func documentRefFits(val any) bool {
 	ref, ok := val.(*org.DocumentRef)
 	if !ok || ref == nil {
 		return true
 	}
-	if !fitsString20(ref.Series.Join(ref.Code)) {
+	if !documentNumberFits(ref) {
 		return false
 	}
 	// The converter writes the last item identity, so all of them must fit.
@@ -82,7 +93,7 @@ func orderingRefsFit(val any) bool {
 	}
 	// A despatch reference (DatiDDT) carries only its number, not an item reference.
 	for _, ref := range o.Despatch {
-		if ref != nil && !fitsString20(ref.Series.Join(ref.Code)) {
+		if !documentNumberFits(ref) {
 			return false
 		}
 	}

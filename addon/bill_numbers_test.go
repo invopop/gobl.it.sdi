@@ -130,6 +130,32 @@ func TestDocumentNumberLength(t *testing.T) {
 		require.NoError(t, inv.Calculate())
 		assert.ErrorContains(t, rules.Validate(inv), "supplier registration entry must be 20 ASCII characters or fewer")
 	})
+
+	t.Run("simplified invoice with long ordering and preceding numbers", func(t *testing.T) {
+		inv := testInvoiceSimplified(t)
+		inv.Preceding = []*org.DocumentRef{{Code: codeOf21}}
+		inv.Ordering = &bill.Ordering{Purchases: []*org.DocumentRef{{Code: codeOf21}}}
+		require.NoError(t, inv.Calculate())
+		assert.NoError(t, rules.Validate(inv))
+	})
+
+	t.Run("simplified note with a long item reference", func(t *testing.T) {
+		inv := testInvoiceSimplified(t)
+		inv.Type = bill.InvoiceTypeCreditNote
+		inv.Preceding = simplifiedPreceding()
+		inv.Preceding[0].Identities = []*org.Identity{{Key: org.IdentityKeyItem, Code: codeOf21}}
+		require.NoError(t, inv.Calculate())
+		assert.NoError(t, rules.Validate(inv))
+	})
+
+	t.Run("simplified note with a preceding number over 20 characters", func(t *testing.T) {
+		inv := testInvoiceSimplified(t)
+		inv.Type = bill.InvoiceTypeCreditNote
+		inv.Preceding = simplifiedPreceding()
+		inv.Preceding[0].Code = codeOf21
+		require.NoError(t, inv.Calculate())
+		assert.ErrorContains(t, rules.Validate(inv), "simplified invoice preceding number must be 20 ASCII characters or fewer")
+	})
 }
 
 func TestFundContributionCodeLength(t *testing.T) {
