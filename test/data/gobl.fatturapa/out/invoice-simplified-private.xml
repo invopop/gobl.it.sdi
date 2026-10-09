@@ -1,0 +1,137 @@
+<p:FatturaElettronicaSemplificata xmlns:p="http://ivaservizi.agenziaentrate.gov.it/docs/xsd/fatture/v1.0" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" versione="FSM10">
+	<FatturaElettronicaHeader>
+		<DatiTrasmissione>
+			<IdTrasmittente>
+				<IdPaese>IT</IdPaese>
+				<IdCodice>01234567890</IdCodice>
+			</IdTrasmittente>
+			<ProgressivoInvio>01a0f2d9</ProgressivoInvio>
+			<FormatoTrasmissione>FSM10</FormatoTrasmissione>
+			<CodiceDestinatario>0000000</CodiceDestinatario>
+		</DatiTrasmissione>
+		<CedentePrestatore>
+			<IdFiscaleIVA>
+				<IdPaese>IT</IdPaese>
+				<IdCodice>12345678903</IdCodice>
+			</IdFiscaleIVA>
+			<Denominazione>Bar Centrale di Bianchi Luca</Denominazione>
+			<Sede>
+				<Indirizzo>Corso Italia</Indirizzo>
+				<NumeroCivico>1</NumeroCivico>
+				<CAP>00198</CAP>
+				<Comune>Roma</Comune>
+				<Provincia>RM</Provincia>
+				<Nazione>IT</Nazione>
+			</Sede>
+			<RegimeFiscale>RF01</RegimeFiscale>
+		</CedentePrestatore>
+		<CessionarioCommittente>
+			<IdentificativiFiscali>
+				<CodiceFiscale>RSSGNN60R30H501U</CodiceFiscale>
+			</IdentificativiFiscali>
+		</CessionarioCommittente>
+	</FatturaElettronicaHeader>
+	<FatturaElettronicaBody>
+		<DatiGenerali>
+			<DatiGeneraliDocumento>
+				<TipoDocumento>TD07</TipoDocumento>
+				<Divisa>EUR</Divisa>
+				<Data>2026-09-28</Data>
+				<Numero>002</Numero>
+			</DatiGeneraliDocumento>
+		</DatiGenerali>
+		<DatiBeniServizi>
+			<Descrizione>Acqua minerale</Descrizione>
+			<Importo>0.12</Importo>
+			<DatiIVA>
+				<Aliquota>22.00</Aliquota>
+			</DatiIVA>
+		</DatiBeniServizi>
+		<DatiBeniServizi>
+			<Descrizione>Acqua minerale</Descrizione>
+			<Importo>0.12</Importo>
+			<DatiIVA>
+				<Aliquota>22.00</Aliquota>
+			</DatiIVA>
+		</DatiBeniServizi>
+		<DatiBeniServizi>
+			<Descrizione>Acqua minerale</Descrizione>
+			<Importo>0.13</Importo>
+			<DatiIVA>
+				<Aliquota>22.00</Aliquota>
+			</DatiIVA>
+		</DatiBeniServizi>
+		<DatiBeniServizi>
+			<Descrizione>Cornetto</Descrizione>
+			<Importo>3.96</Importo>
+			<DatiIVA>
+				<Aliquota>10.00</Aliquota>
+			</DatiIVA>
+		</DatiBeniServizi>
+	</FatturaElettronicaBody>
+	<ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="Signature-01a0f2d9-ebb1-7846-83b4-328f31dec815-Signature">
+		<ds:SignedInfo>
+			<ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod>
+			<ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod>
+			<ds:Reference Id="Reference-01a0f2d9-ebb1-7846-83b4-328f31dec815" Type="http://www.w3.org/2000/09/xmldsig#Object" URI="">
+				<ds:Transforms>
+					<ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform>
+				</ds:Transforms>
+				<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha512"></ds:DigestMethod>
+				<ds:DigestValue>joJcCnI3vRMTSbYWFIPGKDcBzw6l/4N7TN1VNGrqjOeS1bwZOKcOey2ULcKq/j/THLXUHH75cRGUYfnVgcaWnQ==</ds:DigestValue>
+			</ds:Reference>
+			<ds:Reference URI="#Certificate-01a0f2d9-ebb1-7846-83b4-328f31dec815">
+				<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha512"></ds:DigestMethod>
+				<ds:DigestValue>o4uzCQkv+44rkuZnUXlPPO/hpm1N1dFm6mPfdE2C7kAqONi6Ud2iOm7yHtKwTWX1/21TLGGHJjU7uuNNsXkRmg==</ds:DigestValue>
+			</ds:Reference>
+			<ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#Signature-01a0f2d9-ebb1-7846-83b4-328f31dec815-SignedProperties">
+				<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha512"></ds:DigestMethod>
+				<ds:DigestValue>/SyuCDz5y9Uwcanjl0ygzcz7NqckA3qTR6o2MBgw+s3/AYMpSpTV+DJEtT1EwkjU31r8Ke5ZqV1Xjqw/OU4c4A==</ds:DigestValue>
+			</ds:Reference>
+		</ds:SignedInfo>
+		<ds:SignatureValue Id="Signature-01a0f2d9-ebb1-7846-83b4-328f31dec815-SignatureValue">cZnzHPnkXiQMPnWK/FKRr76WTaMPxit1KP9dvNj5R0gMYOzR9+YtKOnobEMibpPcjxqdu67xpIuPHRtK6Jc/QLd4urB4qSXNpiSza9JCqrdCnDNy1YDTKc/cYhk4scuoTnlksf9MtratjJGjcr1KAnAZEQVNaCgWkkdXX/PrLGn6NlzKGteSP3VWkV//hwBgnELd0UzCvrwKVpTx3scp+fP3FKTaE3qam/A/SZoA2PPFqse1N5+x70RZKdfVUGWFDBR/YKlH2Mlooh+G17VQ0smBy11K9wlsrzNkL7xXF6SvIHFzJnBS9UDQy7CJEyPIp/v0FzaiGSXUojBWJY51dQ==</ds:SignatureValue>
+		<ds:KeyInfo Id="Certificate-01a0f2d9-ebb1-7846-83b4-328f31dec815">
+			<ds:X509Data>
+				<ds:X509Certificate>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</ds:X509Certificate>
+			</ds:X509Data>
+			<ds:KeyValue>
+				<ds:RSAKeyValue>
+					<ds:Modulus>ujAnB2L5X2Bm42S5f/axKFu1QsAcZGJAeYELZZJ04jriBu3E8V3Rus3tUxfQ+ylqBm0bNWgHfP+gekosHaYoJNQmAVBuwpd183uHksTRUtbeOAFS2xd7v29stM7ARkec+WVV+SK8G6HECIB0VIAMoB2tVs0y6XRVRcjE4I7kH1h3ZbMIzvW43B4hxruYtXcvozGwvZpxQKVrjEY8IXH5+aXHM8WLCba4I06FyhvI+2/9WUPN2YvDoml7lQM4edgepTEZifq2ZPHGpCC5NhSXj2ab5FtnGTMgUaWH6tCljT0kOdfJBOHnIWOw4dBdgkik2CuxwGyMrq/P5VqQIC2hXQ==</ds:Modulus>
+					<ds:Exponent>AQAB</ds:Exponent>
+				</ds:RSAKeyValue>
+			</ds:KeyValue>
+		</ds:KeyInfo>
+		<ds:Object>
+			<xades:QualifyingProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="Signature-01a0f2d9-ebb1-7846-83b4-328f31dec815-QualifyingProperties" Target="#Signature-01a0f2d9-ebb1-7846-83b4-328f31dec815-Signature">
+				<xades:SignedProperties Id="Signature-01a0f2d9-ebb1-7846-83b4-328f31dec815-SignedProperties">
+					<xades:SignedSignatureProperties>
+						<xades:SigningTime>2022-02-01T04:00:00+00:00</xades:SigningTime>
+						<xades:SigningCertificate>
+							<xades:Cert>
+								<xades:CertDigest>
+									<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha512"></ds:DigestMethod>
+									<ds:DigestValue>VmNYwDiCBBXJX/IL1AUYj7uHouM2Jcp3ZkeqmB+FKGTTwXIIZnCWmZVhCSB7uNoV6Xee7nZVkMqeCMQk3tGR0g==</ds:DigestValue>
+								</xades:CertDigest>
+								<xades:IssuerSerial>
+									<ds:X509IssuerName>CN=AC FNMT Usuarios,OU=Ceres,O=FNMT-RCM,C=ES</ds:X509IssuerName>
+									<ds:X509SerialNumber>96891622000445695554354105786026700712</ds:X509SerialNumber>
+								</xades:IssuerSerial>
+							</xades:Cert>
+						</xades:SigningCertificate>
+					</xades:SignedSignatureProperties>
+					<xades:SignedDataObjectProperties>
+						<xades:DataObjectFormat ObjectReference="#Reference-01a0f2d9-ebb1-7846-83b4-328f31dec815">
+							<xades:Description>Fattura PA</xades:Description>
+							<xades:ObjectIdentifier>
+								<xades:Identifier Qualifier="OIDAsURN">urn:oid:1.2.840.10003.5.109.10</xades:Identifier>
+								<xades:Description></xades:Description>
+							</xades:ObjectIdentifier>
+							<xades:MimeType>text/xml</xades:MimeType>
+							<xades:Encoding></xades:Encoding>
+						</xades:DataObjectFormat>
+					</xades:SignedDataObjectProperties>
+				</xades:SignedProperties>
+			</xades:QualifyingProperties>
+		</ds:Object>
+	</ds:Signature>
+</p:FatturaElettronicaSemplificata>

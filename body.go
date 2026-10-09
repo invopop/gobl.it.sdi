@@ -1,7 +1,6 @@
 package fatturapa
 
 import (
-	"errors"
 	"fmt"
 
 	sdi "github.com/invopop/gobl.it.sdi/addon"
@@ -202,19 +201,14 @@ func newGeneralDocumentData(inv *bill.Invoice) (*GeneralDocumentData, error) {
 
 	switch codeDocumentType {
 	case "TD07", "TD08", "TD09":
-		return nil, errors.New("simplified invoices are not currently supported")
-	}
-
-	code := inv.Code
-	if inv.Series != "" {
-		code = cbc.Code(fmt.Sprintf("%s-%s", inv.Series, inv.Code))
+		return nil, fmt.Errorf("document type %s requires the %s format", codeDocumentType, formatoTrasmissioneFSM10)
 	}
 
 	doc := &GeneralDocumentData{
 		DocumentType:      codeDocumentType,
 		Currency:          string(inv.Currency),
 		IssueDate:         inv.IssueDate.String(),
-		Number:            code.String(),
+		Number:            invoiceNumber(inv),
 		RetainedTaxes:     dr,
 		StampDuty:         newStampDuty(inv.Charges),
 		FundContributions: newFundContributions(inv.Charges),
@@ -225,6 +219,13 @@ func newGeneralDocumentData(inv *bill.Invoice) (*GeneralDocumentData, error) {
 	}
 
 	return doc, nil
+}
+
+func invoiceNumber(inv *bill.Invoice) string {
+	if inv.Series != "" {
+		return fmt.Sprintf("%s-%s", inv.Series, inv.Code)
+	}
+	return inv.Code.String()
 }
 
 // documentTotal is the total with tax plus rounding, before any withholding.

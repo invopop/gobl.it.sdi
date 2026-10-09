@@ -106,17 +106,22 @@ func billInvoiceRules() *rules.Set {
 			rules.Field("tax_id",
 				rules.Assert("11", "customer tax ID is required", is.Present),
 			),
-			rules.Field("addresses",
-				rules.Assert("12", "customer addresses are required", is.Present),
+		),
+		// A simplified invoice may identify the customer by tax code alone
+		rules.When(is.Not(is.Func("simplified invoice", invoiceIsSimplified)),
+			rules.Field("customer",
+				rules.Field("addresses",
+					rules.Assert("12", "customer addresses are required", is.Present),
+				),
 			),
-		),
-		// Customer name required when tax_id code is present or people is nil
-		rules.Assert("13", "customer name is required",
-			is.Func("customer name check", invoiceCustomerHasNameOrPeople),
-		),
-		// Customer people required when name is empty
-		rules.Assert("14", "customer people are required when name is empty",
-			is.Func("customer people check", invoiceCustomerHasPeopleOrName),
+			// Customer name required when tax_id code is present or people is nil
+			rules.Assert("13", "customer name is required",
+				is.Func("customer name check", invoiceCustomerHasNameOrPeople),
+			),
+			// Customer people required when name is empty
+			rules.Assert("14", "customer people are required when name is empty",
+				is.Func("customer people check", invoiceCustomerHasPeopleOrName),
+			),
 		),
 		// Customer tax_id code required for Italian parties without fiscal code
 		rules.When(is.Func("Italian customer without fiscal code", invoiceCustomerIsItalianWithoutFiscalCode),
@@ -178,6 +183,15 @@ func billInvoiceRules() *rules.Set {
 		rules.Assert("21", "payment instructions are required when terms with due dates are present",
 			is.Func("payment instructions check", invoicePaymentInstructionsPresent),
 		),
+		rules.Field("tax",
+			rules.Field("ext",
+				rules.Assert("23",
+					fmt.Sprintf("'%s' FSM10 goes with document types TD07, TD08 and TD09 only", ExtKeyFormat),
+					is.Func("simplified format matches document type", simplifiedFormatMatchesDocumentType),
+				),
+			),
+		),
+		simplifiedInvoiceRules(),
 	)
 }
 

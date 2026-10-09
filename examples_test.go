@@ -10,6 +10,7 @@ import (
 
 	"encoding/xml"
 
+	fatturapa "github.com/invopop/gobl.it.sdi"
 	"github.com/invopop/gobl.it.sdi/test"
 	"github.com/invopop/gobl/bill"
 	"github.com/stretchr/testify/assert"
@@ -17,7 +18,9 @@ import (
 )
 
 func TestGOBLToXMLExamples(t *testing.T) {
-	schema, err := test.LoadSchema()
+	ordinarySchema, err := test.LoadSchema()
+	require.NoError(t, err)
+	simplifiedSchema, err := test.LoadSimplifiedSchema()
 	require.NoError(t, err)
 
 	path := test.GetDataPath(test.PathGOBLFatturaPA)
@@ -36,24 +39,29 @@ func TestGOBLToXMLExamples(t *testing.T) {
 
 		env := test.LoadTestFile(file, test.PathGOBLFatturaPA)
 
-		doc, err := test.ConvertFromGOBL(env, test.LoadOptions()...)
+		doc, err := fatturapa.Convert(env, test.LoadOptions()...)
 		require.NoError(t, err)
+
+		schema := ordinarySchema
+		if _, ok := doc.(*fatturapa.SimplifiedInvoice); ok {
+			schema = simplifiedSchema
+		}
 
 		data, err := xml.MarshalIndent(doc, "", "\t")
 		require.NoError(t, err)
+
+		errs := test.ValidateXML(schema, data)
+		for _, e := range errs {
+			require.NoError(t, e)
+		}
+		if len(errs) > 0 {
+			require.Fail(t, "Invalid XML:\n"+string(data))
+		}
 
 		np := strings.TrimSuffix(file, filepath.Ext(file)) + ".xml"
 		outPath := filepath.Join(test.GetDataPath(test.PathGOBLFatturaPA), "out", np)
 
 		if *test.UpdateOut {
-			errs := test.ValidateXML(schema, data)
-			for _, e := range errs {
-				require.NoError(t, e)
-			}
-			if len(errs) > 0 {
-				require.Fail(t, "Invalid XML:\n"+string(data))
-			}
-
 			err = os.WriteFile(outPath, data, 0644)
 			require.NoError(t, err, "writing file")
 		}
