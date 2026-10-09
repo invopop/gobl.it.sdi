@@ -70,13 +70,14 @@ func documentRefFits(val any) bool {
 	if !documentNumberFits(ref) {
 		return false
 	}
-	// The converter writes the last item identity, so all of them must fit.
+	// The converter writes only the last item identity as NumItem.
+	var item *org.Identity
 	for _, id := range ref.Identities {
-		if id != nil && id.Key == org.IdentityKeyItem && !fitsString20(id.Code) {
-			return false
+		if id != nil && id.Key == org.IdentityKeyItem {
+			item = id
 		}
 	}
-	return true
+	return item == nil || fitsString20(item.Code)
 }
 
 func orderingRefsFit(val any) bool {
