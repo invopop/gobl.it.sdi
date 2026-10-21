@@ -102,12 +102,16 @@ func goblBillInvoiceAddLineDetails(inv *bill.Invoice, lineDetails []*LineDetail,
 			line.Period = p
 		}
 
-		// Add unit. Add to description if unit is invalid
-		if detail.Unit != "" {
-			if unit := parseUnit(detail.Unit); unit != "" {
+		// Add unit, keeping the supplier's wording as a label when GOBL has none,
+		// under the meta key gobl.pl.ksef uses for KSeF's free-form units. Unlike
+		// gobl.pl.ksef, a value shaped like a UN/ECE code is kept as a label too
+		// rather than in the untdid-unit extension: UnitaMisura is free text, so an
+		// abbreviation such as CF can't be told apart from a real code.
+		if measure := strings.TrimSpace(detail.Unit); measure != "" {
+			if unit := parseUnit(measure); unit != "" {
 				line.Item.Unit = unit
 			} else {
-				line.Item.Description = fmt.Sprintf("(Unit: %s)", detail.Unit)
+				line.Item.Meta = cbc.Meta{sdi.MetaKeyUnitLabel: measure}
 			}
 		}
 
@@ -155,11 +159,40 @@ func goblBillInvoiceAddLineDetails(inv *bill.Invoice, lineDetails []*LineDetail,
 	return nil
 }
 
+// italianUnits maps the abbreviations Italian suppliers commonly write in
+// UnitaMisura, which is free text, to GOBL units. Upper-case ML is left out on
+// purpose: it means linear metres to some and millilitres to others. Lower-case
+// ml is GOBL's own millilitre key, which the conversion to FatturaPA writes.
+var italianUnits = map[string]cbc.Key{
+	"PZ":     org.UnitPiece,
+	"PZ.":    org.UnitPiece,
+	"PZZ":    org.UnitPiece,
+	"PEZZI":  org.UnitPiece,
+	"NR":     org.UnitPiece,
+	"N.":     org.UnitPiece,
+	"NUM":    org.UnitPiece,
+	"KG":     org.UnitKilogram,
+	"GR":     org.UnitGram,
+	"LT":     org.UnitLitre,
+	"MT":     org.UnitMetre,
+	"MQ":     org.UnitSquareMetre,
+	"MC":     org.UnitCubicMetre,
+	"ORE":    org.UnitHour,
+	"ORA":    org.UnitHour,
+	"GG":     org.UnitDay,
+	"GIORNI": org.UnitDay,
+	"MESE":   org.UnitMonth,
+	"MESI":   org.UnitMonth,
+}
+
 // parseUnit returns the GOBL unit for a FatturaPA UnitaMisura, which may be
-// written as a GOBL unit key or as a UN/ECE code. It returns an empty key when
-// GOBL has no unit for it.
+// written as a GOBL unit key, as a common Italian abbreviation or as a UN/ECE
+// code. It returns an empty key when GOBL has no unit for it.
 func parseUnit(code string) cbc.Key {
 	if key := cbc.Key(code); org.HasValidUnitKey.Check(key) {
+		return key
+	}
+	if key, ok := italianUnits[strings.ToUpper(strings.ReplaceAll(code, " ", ""))]; ok {
 		return key
 	}
 	return untdid.UnitKey(cbc.Code(code))

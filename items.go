@@ -6,6 +6,7 @@ import (
 
 	sdi "github.com/invopop/gobl.it.sdi/addon"
 	"github.com/invopop/gobl/bill"
+	"github.com/invopop/gobl/catalogues/untdid"
 	"github.com/invopop/gobl/i18n"
 	"github.com/invopop/gobl/org"
 	"github.com/invopop/gobl/tax"
@@ -85,7 +86,7 @@ func generateLineDetails(inv *bill.Invoice) []*LineDetail {
 			LineNumber:       strconv.Itoa(line.Index),
 			Description:      line.Item.Name,
 			Quantity:         formatAmount8(&q),
-			Unit:             string(line.Item.Unit),
+			Unit:             lineUnit(line.Item),
 			UnitPrice:        formatAmount8(&lp),
 			TotalPrice:       formatAmount8(line.Total),
 			PriceAdjustments: extractLinePriceAdjustments(line),
@@ -127,6 +128,20 @@ func generateLineDetails(inv *bill.Invoice) []*LineDetail {
 	}
 
 	return dl
+}
+
+// lineUnit returns the UnitaMisura for an item: the supplier's own wording
+// when it was kept as a unit label, then the GOBL unit, then a code GOBL keeps
+// in the untdid-unit extension because it has no unit for it, as gobl.pl.ksef
+// does.
+func lineUnit(item *org.Item) string {
+	if label := item.Meta[sdi.MetaKeyUnitLabel]; label != "" {
+		return label
+	}
+	if item.Unit != "" {
+		return string(item.Unit)
+	}
+	return item.Ext.Get(untdid.ExtKeyUnit).String()
 }
 
 // attributesToOtherData maps an item's attributes to AltriDatiGestionali blocks.
