@@ -6,6 +6,7 @@ import (
 	sdi "github.com/invopop/gobl.it.sdi/addon"
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/num"
+	"github.com/invopop/gobl/pay"
 	"github.com/invopop/gobl/tax"
 )
 
@@ -38,10 +39,10 @@ func newPaymentData(inv *bill.Invoice) ([]*PaymentData, error) {
 
 	paymentData := []*PaymentData{}
 
-	if inv.Payment.Advances != nil {
+	if advances := paidAdvances(inv); len(advances) > 0 {
 		paymentData = append(paymentData, &PaymentData{
 			Conditions: condizioniPagamentoAdvance,
-			Payments:   prepareAdvancePaymentDetails(inv),
+			Payments:   prepareAdvancePaymentDetails(advances),
 		})
 	}
 
@@ -71,11 +72,23 @@ func newPaymentData(inv *bill.Invoice) ([]*PaymentData, error) {
 	return paymentData, nil
 }
 
-func prepareAdvancePaymentDetails(inv *bill.Invoice) []*PaymentDetailRow {
-	var dp []*PaymentDetailRow
-	payment := inv.Payment
+// paidAdvances returns the advances the customer has actually paid. Waiver
+// advances, such as the split payment VAT, record amounts the supplier never
+// collects, so they are not payments.
+func paidAdvances(inv *bill.Invoice) []*pay.Record {
+	var list []*pay.Record
+	for _, a := range inv.Payment.Advances {
+		if a != nil && a.Waiver == "" {
+			list = append(list, a)
+		}
+	}
+	return list
+}
 
-	for _, advance := range payment.Advances {
+func prepareAdvancePaymentDetails(advances []*pay.Record) []*PaymentDetailRow {
+	var dp []*PaymentDetailRow
+
+	for _, advance := range advances {
 		row := &PaymentDetailRow{
 			Method: advance.Ext.Get(sdi.ExtKeyPaymentMeans).String(),
 			Amount: formatAmount2(&advance.Amount),
@@ -158,12 +171,14 @@ func dueDateAmounts(inv *bill.Invoice) []*num.Amount {
 }
 
 // amountDue is what the customer still owes the supplier: the payable total
-// less any advances already paid, and less any VAT the customer pays directly
-// to the tax authority under split payment.
+// less the advances actually paid, and less any VAT the customer pays directly
+// to the tax authority under split payment. GOBL's own amount due isn't used:
+// it already leaves out the split payment waiver advance, so taking the VAT
+// off it again would count it twice.
 func amountDue(inv *bill.Invoice) num.Amount {
 	due := inv.Totals.Payable
-	if inv.Totals.Due != nil {
-		due = *inv.Totals.Due
+	for _, a := range paidAdvances(inv) {
+		due = due.Subtract(a.Amount)
 	}
 	return due.Subtract(splitPaymentVAT(inv))
 }

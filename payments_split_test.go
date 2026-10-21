@@ -3,11 +3,14 @@ package fatturapa_test
 import (
 	"testing"
 
+	sdi "github.com/invopop/gobl.it.sdi/addon"
 	"github.com/invopop/gobl.it.sdi/test"
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/cal"
+	"github.com/invopop/gobl/cbc"
 	"github.com/invopop/gobl/num"
 	"github.com/invopop/gobl/pay"
+	"github.com/invopop/gobl/tax"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -113,6 +116,76 @@ func TestPaymentsSplitPayment(t *testing.T) {
 		assert.Equal(t, "932.00", dp.Payments[0].Amount)
 	})
 
+	t.Run("a waiver advance for the split payment VAT is not a payment", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-split-payment.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Payment.Advances = []*pay.Record{splitPaymentWaiver()}
+		})
+		require.NoError(t, env.Calculate())
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		// GOBL's amount due is already net, so the VAT must not come off twice.
+		require.Len(t, doc.Body[0].PaymentsData, 1)
+		dp := doc.Body[0].PaymentsData[0]
+		assert.Equal(t, "TP02", dp.Conditions)
+		require.Len(t, dp.Payments, 1)
+		assert.Equal(t, "1032.00", dp.Payments[0].Amount)
+	})
+
+	t.Run("only the advances actually paid are reported next to the waiver", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-split-payment.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Payment.Advances = []*pay.Record{
+				{Key: pay.MeansKeyCreditTransfer, Description: "Deposit", Amount: num.MakeAmount(10000, 2)},
+				splitPaymentWaiver(),
+			}
+		})
+		require.NoError(t, env.Calculate())
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		require.Len(t, doc.Body[0].PaymentsData, 2)
+		adv := doc.Body[0].PaymentsData[0]
+		assert.Equal(t, "TP03", adv.Conditions)
+		require.Len(t, adv.Payments, 1)
+		assert.Equal(t, "MP05", adv.Payments[0].Method)
+		assert.Equal(t, "100.00", adv.Payments[0].Amount)
+
+		dp := doc.Body[0].PaymentsData[1]
+		assert.Equal(t, "TP02", dp.Conditions)
+		require.Len(t, dp.Payments, 1)
+		assert.Equal(t, "932.00", dp.Payments[0].Amount)
+	})
+
+	t.Run("a document calculated without the waiver advance comes to the same amount", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-split-payment.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, withoutSplitPaymentWaiver)
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		require.Len(t, doc.Body[0].PaymentsData, 1)
+		dp := doc.Body[0].PaymentsData[0]
+		assert.Equal(t, "TP02", dp.Conditions)
+		require.Len(t, dp.Payments, 1)
+		assert.Equal(t, "1032.00", dp.Payments[0].Amount)
+	})
+
+	t.Run("a document calculated without the waiver advance or due dates comes to the same amount", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-split-payment.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			withoutSplitPaymentWaiver(inv)
+			inv.Payment.Terms = nil
+		})
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		dp := doc.Body[0].PaymentsData[0]
+		assert.Equal(t, "TP02", dp.Conditions)
+		require.Len(t, dp.Payments, 1)
+		assert.Equal(t, "1032.00", dp.Payments[0].Amount)
+	})
+
 	t.Run("without due dates the single payment is net of split payment VAT", func(t *testing.T) {
 		env := test.LoadTestFile("invoice-split-payment.json", test.PathGOBLFatturaPA)
 		test.ModifyInvoice(env, func(inv *bill.Invoice) {
@@ -126,4 +199,37 @@ func TestPaymentsSplitPayment(t *testing.T) {
 		require.Len(t, dp.Payments, 1)
 		assert.Equal(t, "1032.00", dp.Payments[0].Amount)
 	})
+}
+
+// withoutSplitPaymentWaiver puts an invoice back the way GOBL calculated it
+// before the split payment VAT was recorded as a waiver advance: no advance,
+// no amount due, and due dates worked out on the gross total.
+func withoutSplitPaymentWaiver(inv *bill.Invoice) {
+	inv.Payment.Advances = nil
+	inv.Totals.Advances = nil
+	inv.Totals.Due = nil
+	if inv.Payment.Terms == nil {
+		return
+	}
+	for _, dd := range inv.Payment.Terms.DueDates {
+		if dd.Percent != nil {
+			gross := dd.Percent.Of(inv.Totals.Payable)
+			dd.Amount = &gross
+		}
+	}
+}
+
+// splitPaymentWaiver is the advance that records the split payment VAT as an
+// amount the supplier never collects, with GOBL working out its amount.
+func splitPaymentWaiver() *pay.Record {
+	return &pay.Record{
+		Waiver:      "vat-split-payment",
+		Description: "Scissione dei pagamenti",
+		Taxes: []*tax.Filter{{
+			Category: tax.CategoryVAT,
+			Ext: tax.ExtensionsOf(cbc.CodeMap{
+				sdi.ExtKeyVATLiability: sdi.ExtCodeVATLiabilitySplitPayment,
+			}),
+		}},
+	}
 }
