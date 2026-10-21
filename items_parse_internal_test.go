@@ -156,3 +156,52 @@ func TestValidTipoDato(t *testing.T) {
 		})
 	}
 }
+
+func TestParseUnit(t *testing.T) {
+	tests := []struct {
+		in   string
+		want cbc.Key
+	}{
+		// GOBL units, as written by the GOBL to FatturaPA conversion
+		{"kg", "kg"},
+		{"h", "h"},
+		{"piece", "piece"},
+		// Abbreviations Italian suppliers commonly write
+		{"PZ", "piece"},
+		{"pz", "piece"},
+		{"PZ.", "piece"},
+		{"PZZ", "piece"},
+		{" pz ", "piece"},
+		{"PEZZI", "piece"},
+		{"NR", "piece"},
+		{"N.", "piece"},
+		{"NUM", "piece"},
+		{"KG", "kg"},
+		{"Kg", "kg"},
+		{"GR", "g"},
+		{"LT", "l"},
+		{"MT", "m"},
+		{"MQ", "m2"},
+		{"MC", "m3"},
+		{"ORE", "h"},
+		{"ORA", "h"},
+		{"GG", "day"},
+		{"GIORNI", "day"},
+		{"MESE", "mon"},
+		{"MESI", "mon"},
+		// UN/ECE codes GOBL has a unit for
+		{"KGM", "kg"},
+		{"HUR", "h"},
+		{"H87", "piece"},
+		{"C62", "one"},
+		// No GOBL unit: ML is linear metres to some and millilitres to others
+		{"ML", ""},
+		{"CONF", ""},
+		{"XYZ", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.in, func(t *testing.T) {
+			assert.Equal(t, tt.want, parseUnit(tt.in))
+		})
+	}
+}

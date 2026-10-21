@@ -1591,3 +1591,30 @@ func TestDocumentNumberLength(t *testing.T) {
 		assert.ErrorContains(t, rules.Validate(inv), "simplified invoice preceding number must be 20 ASCII characters or fewer")
 	})
 }
+
+func TestItemUnitLabelValidation(t *testing.T) {
+	tests := []struct {
+		label string
+		valid bool
+	}{
+		{"CONF", true},
+		{"CONFEZIONE", true},
+		{"confezioni da 6", false},
+		{"箱", false},
+		{"A\x00B", false},
+		{"A\tB", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.label, func(t *testing.T) {
+			inv := testInvoiceStandard(t)
+			inv.Lines[0].Item.Meta = cbc.Meta{sdi.MetaKeyUnitLabel: tt.label}
+			require.NoError(t, inv.Calculate())
+			err := rules.Validate(inv)
+			if tt.valid {
+				assert.NoError(t, err)
+				return
+			}
+			assert.ErrorContains(t, err, "item unit label must be 1 to 10 Basic Latin characters")
+		})
+	}
+}

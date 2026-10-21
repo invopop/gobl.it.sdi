@@ -22,6 +22,20 @@ var partyHasTaxIDCode = org.PartyHasTaxIDCode()
 // string20 matches FatturaPA's String20Type: up to 20 Basic Latin characters.
 var string20 = regexp.MustCompile(`^[[:ascii:]]{0,20}$`)
 
+// basicLatin matches the Basic Latin characters an XML document can carry:
+// printable ASCII, plus the tab and line breaks a normalizedString turns into
+// spaces. GOBL already strips other control characters from the fields it
+// normalizes, but not from meta values such as the unit label.
+const basicLatin = `[\t\n\r\x20-\x7E]`
+
+// string10 matches FatturaPA's String10Type: 1 to 10 Basic Latin characters.
+var string10 = regexp.MustCompile(`^` + basicLatin + `{1,10}$`)
+
+// MetaKeyUnitLabel is the item meta key that holds a supplier's UnitaMisura
+// when GOBL has no unit for it. The FatturaPA conversion writes it back as
+// UnitaMisura, so it must fit that field.
+const MetaKeyUnitLabel cbc.Key = "unit-label"
+
 func normalizeInvoice(inv *bill.Invoice) {
 	normalizeSupplier(inv.Supplier)
 	normalizeIssuerType(inv)
@@ -192,6 +206,11 @@ func billInvoiceRules() *rules.Set {
 					rules.Field("name",
 						rules.Assert("18", "item name must use Latin-1 characters",
 							is.FuncError("latin1", validateLatin1String),
+						),
+					),
+					rules.Field("meta",
+						rules.Assert("71", "item unit label must be 1 to 10 Basic Latin characters",
+							is.Func("unit label fits UnitaMisura", itemUnitLabelFits),
 						),
 					),
 				),
@@ -602,4 +621,12 @@ func orderingRefsFit(val any) bool {
 		}
 	}
 	return true
+}
+
+// itemUnitLabelFits checks that a unit label kept in the item meta fits
+// UnitaMisura, where the FatturaPA conversion writes it.
+func itemUnitLabelFits(val any) bool {
+	meta, _ := val.(cbc.Meta)
+	label := meta[MetaKeyUnitLabel]
+	return label == "" || string10.MatchString(label)
 }
