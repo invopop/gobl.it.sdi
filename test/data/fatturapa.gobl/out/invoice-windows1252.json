@@ -89,8 +89,8 @@
 						"text": "Id: 2811 - QtÃ : 1"
 					}
 				],
-				"price": "101.750000",
-				"unit": "PZ"
+				"description": "(Unit: PZ)",
+				"price": "101.750000"
 			},
 			"sum": "101.750000",
 			"taxes": [

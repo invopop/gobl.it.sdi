@@ -117,6 +117,17 @@
 		}
 	],
 	"payment": {
+		"advances": [
+			{
+				"date": "2023-05-01",
+				"key": "card",
+				"description": "Advance payment",
+				"amount": "29.00",
+				"ext": {
+					"it-sdi-payment-means": "MP08"
+				}
+			}
+		],
 		"terms": {
 			"key": "due-date",
 			"due_dates": [
@@ -130,17 +141,6 @@
 				}
 			]
 		},
-		"advances": [
-			{
-				"date": "2023-05-01",
-				"key": "card",
-				"description": "Advance payment",
-				"amount": "29.00",
-				"ext": {
-					"it-sdi-payment-means": "MP08"
-				}
-			}
-		],
 		"instructions": {
 			"key": "credit-transfer",
 			"credit_transfer": [

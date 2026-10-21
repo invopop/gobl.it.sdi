@@ -193,9 +193,6 @@
 			}
 		],
 		"payment": {
-			"terms": {
-				"key": "advanced"
-			},
 			"advances": [
 				{
 					"date": "2025-01-15",
@@ -215,7 +212,10 @@
 						"it-sdi-payment-means": "MP01"
 					}
 				}
-			]
+			],
+			"terms": {
+				"key": "advanced"
+			}
 		},
 		"totals": {
 			"sum": "248.58",

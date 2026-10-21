@@ -106,9 +106,6 @@
 		}
 	],
 	"payment": {
-		"terms": {
-			"key": "advanced"
-		},
 		"advances": [
 			{
 				"date": "2023-05-01",
@@ -119,7 +116,10 @@
 					"it-sdi-payment-means": "MP08"
 				}
 			}
-		]
+		],
+		"terms": {
+			"key": "advanced"
+		}
 	},
 	"totals": {
 		"sum": "219.18",

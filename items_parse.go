@@ -8,6 +8,7 @@ import (
 	sdi "github.com/invopop/gobl.it.sdi/addon"
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/cal"
+	"github.com/invopop/gobl/catalogues/untdid"
 	"github.com/invopop/gobl/cbc"
 	"github.com/invopop/gobl/num"
 	"github.com/invopop/gobl/org"
@@ -103,11 +104,10 @@ func goblBillInvoiceAddLineDetails(inv *bill.Invoice, lineDetails []*LineDetail,
 
 		// Add unit. Add to description if unit is invalid
 		if detail.Unit != "" {
-			unit := org.Unit(detail.Unit)
-			if err := unit.Validate(); err != nil {
-				line.Item.Description = fmt.Sprintf("(Unit: %s)", detail.Unit)
-			} else {
+			if unit := parseUnit(detail.Unit); unit != "" {
 				line.Item.Unit = unit
+			} else {
+				line.Item.Description = fmt.Sprintf("(Unit: %s)", detail.Unit)
 			}
 		}
 
@@ -158,6 +158,16 @@ func goblBillInvoiceAddLineDetails(inv *bill.Invoice, lineDetails []*LineDetail,
 	}
 
 	return nil
+}
+
+// parseUnit returns the GOBL unit for a FatturaPA UnitaMisura, which may be
+// written as a GOBL unit key or as a UN/ECE code. It returns an empty key when
+// GOBL has no unit for it.
+func parseUnit(code string) cbc.Key {
+	if key := cbc.Key(code); org.HasValidUnitKey.Check(key) {
+		return key
+	}
+	return untdid.UnitKey(cbc.Code(code))
 }
 
 // otherDataToAttribute converts an AltriDatiGestionali block into a GOBL item
