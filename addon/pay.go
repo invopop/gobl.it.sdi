@@ -98,12 +98,25 @@ func payInstructionsRules() *rules.Set {
 	)
 }
 
+// payAdvanceRules requires a payment means on every advance actually paid.
+// Waiver advances, such as the split payment VAT, record an amount the
+// supplier never collects, so they have no means. The split payment waiver is
+// the only one the FatturaPA conversion knows how to leave out, so any other
+// is refused.
 func payAdvanceRules() *rules.Set {
 	return rules.For(new(pay.Record),
-		rules.Field("ext",
-			rules.Assert("01",
-				fmt.Sprintf("payment advance requires '%s' extension", ExtKeyPaymentMeans),
-				tax.ExtensionsRequire(ExtKeyPaymentMeans),
+		rules.When(is.Expr(`string(Waiver) == ""`),
+			rules.Field("ext",
+				rules.Assert("01",
+					fmt.Sprintf("payment advance requires '%s' extension", ExtKeyPaymentMeans),
+					tax.ExtensionsRequire(ExtKeyPaymentMeans),
+				),
+			),
+		),
+		rules.Field("waiver",
+			rules.AssertIfPresent("02",
+				fmt.Sprintf("payment advance waiver must be '%s'", WaiverVATSplitPayment),
+				is.In(WaiverVATSplitPayment),
 			),
 		),
 	)

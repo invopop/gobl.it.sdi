@@ -4,7 +4,7 @@
 		"uuid": "679a2f25-7483-11ec-9722-7ea2cb436ff6",
 		"dig": {
 			"alg": "sha256",
-			"val": "d72be849dd4f398708be06e4f5ebf9341c7df36be3a4d6631a68ada0573b64f6"
+			"val": "9f6edeb7aee4dc6d2f1caa29ceccdce8b6bb8aab1edbea8f02c5d7778f49185c"
 		}
 	},
 	"doc": {
@@ -179,11 +179,26 @@
 			}
 		],
 		"payment": {
+			"advances": [
+				{
+					"waiver": "vat-split-payment",
+					"description": "Scissione dei pagamenti",
+					"taxes": [
+						{
+							"cat": "VAT",
+							"ext": {
+								"it-sdi-vat-liability": "S"
+							}
+						}
+					],
+					"amount": "356.40"
+				}
+			],
 			"terms": {
 				"due_dates": [
 					{
 						"date": "2023-04-30",
-						"amount": "1388.40",
+						"amount": "1032.00",
 						"percent": "100%"
 					}
 				]
@@ -236,7 +251,9 @@
 			},
 			"tax": "356.40",
 			"total_with_tax": "1388.40",
-			"payable": "1388.40"
+			"payable": "1388.40",
+			"advance": "356.40",
+			"due": "1032.00"
 		}
 	}
 }

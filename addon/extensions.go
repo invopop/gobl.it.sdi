@@ -933,6 +933,19 @@ var extensions = []*cbc.Definition{
 			i18n.EN: "VAT Liability",
 			i18n.IT: "Esigibilità dell'IVA",
 		},
+		Desc: i18n.String{
+			i18n.EN: here.Doc(`
+				Says when the VAT on a line becomes chargeable, written to FatturaPA's
+				~EsigibilitaIVA~: ~I~ immediately, ~D~ deferred, or ~S~ under split
+				payment (scissione dei pagamenti, art. 17-ter DPR 633/72), where the
+				customer pays the VAT straight to the tax authority.
+
+				When a line or charge has standard VAT marked ~S~, the addon adds a
+				payment advance with the ~vat-split-payment~ waiver for that VAT, so the
+				amount due and the due dates leave it out while the VAT stays on the
+				invoice.
+			`),
+		},
 		Values: []*cbc.Definition{
 			{
 				Code: "I",

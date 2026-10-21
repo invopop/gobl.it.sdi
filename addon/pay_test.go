@@ -143,3 +143,23 @@ func TestPayDueDateValidation(t *testing.T) {
 		assert.NoError(t, err)
 	})
 }
+
+func TestPayAdvanceWaiverValidation(t *testing.T) {
+	t.Run("the split payment waiver needs no payment means", func(t *testing.T) {
+		inv := testInvoiceSplitPayment(t)
+		require.NoError(t, inv.Calculate())
+		assert.NoError(t, rules.Validate(inv))
+	})
+
+	t.Run("other waivers are refused", func(t *testing.T) {
+		inv := testInvoiceStandard(t)
+		inv.Payment = &bill.PaymentDetails{
+			Advances: []*pay.Record{
+				{Waiver: "write-off", Description: "Write-off", Amount: num.MakeAmount(1000, 2)},
+			},
+		}
+		require.NoError(t, inv.Calculate())
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, fmt.Sprintf("payment advance waiver must be '%s'", sdi.WaiverVATSplitPayment))
+	})
+}
