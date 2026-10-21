@@ -1,6 +1,8 @@
 package fatturapa_test
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	sdi "github.com/invopop/gobl.it.sdi/addon"
@@ -223,7 +225,7 @@ func withoutSplitPaymentWaiver(inv *bill.Invoice) {
 // amount the supplier never collects, with GOBL working out its amount.
 func splitPaymentWaiver() *pay.Record {
 	return &pay.Record{
-		Waiver:      "vat-split-payment",
+		Waiver:      sdi.WaiverVATSplitPayment,
 		Description: "Scissione dei pagamenti",
 		Taxes: []*tax.Filter{{
 			Category: tax.CategoryVAT,
@@ -232,4 +234,22 @@ func splitPaymentWaiver() *pay.Record {
 			}),
 		}},
 	}
+}
+
+// A split payment invoice received through SDI gets the same waiver advance,
+// so its amount due is what the customer owes the supplier.
+func TestParseSplitPayment(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join(test.GetDataPath(test.PathFatturaPAGOBL), "invoice-split-payment.xml"))
+	require.NoError(t, err)
+	env, err := test.ConvertToGOBL(data)
+	require.NoError(t, err)
+	inv, ok := env.Extract().(*bill.Invoice)
+	require.True(t, ok)
+
+	require.NotNil(t, inv.Payment)
+	require.Len(t, inv.Payment.Advances, 1)
+	assert.Equal(t, sdi.WaiverVATSplitPayment, inv.Payment.Advances[0].Waiver)
+	assert.Equal(t, "356.40", inv.Payment.Advances[0].Amount.String())
+	require.NotNil(t, inv.Totals.Due)
+	assert.Equal(t, "1032.00", inv.Totals.Due.String())
 }

@@ -25,6 +25,7 @@ var string20 = regexp.MustCompile(`^[[:ascii:]]{0,20}$`)
 func normalizeInvoice(inv *bill.Invoice) {
 	normalizeSupplier(inv.Supplier)
 	normalizeIssuerType(inv)
+	normalizeSplitPayment(inv)
 }
 
 // normalizeIssuerType sets TZ when the invoice names a third-party issuer and

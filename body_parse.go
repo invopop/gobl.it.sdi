@@ -101,7 +101,8 @@ func goblBillInvoiceAddBody(inv *bill.Invoice, body *Body) error {
 }
 
 // roundToCurrencyWhenNeutral switches the invoice to the currency rounding
-// rule when that changes nothing in the totals but the payable. A withholding
+// rule when that changes nothing in the totals but the payable, and the amount
+// due that follows from it. A withholding
 // is stated to the cent and precise rounding would deduct it unrounded,
 // leaving the payable a cent off; but the currency rule also rounds each
 // line and adjustment before summing, which must not move the totals.
@@ -120,6 +121,7 @@ func roundToCurrencyWhenNeutral(inv *bill.Invoice) error {
 		return nil
 	}
 	precise.Totals.Payable = currency.Totals.Payable
+	precise.Totals.Due = currency.Totals.Due
 	pt, err := json.Marshal(precise.Totals)
 	if err != nil {
 		return err
