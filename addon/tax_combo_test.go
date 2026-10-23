@@ -7,8 +7,10 @@ import (
 	"github.com/invopop/gobl/cbc"
 	"github.com/invopop/gobl/norm"
 	"github.com/invopop/gobl/num"
+	"github.com/invopop/gobl/rules"
 	"github.com/invopop/gobl/tax"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNormalizeTaxCombo(t *testing.T) {
@@ -74,4 +76,38 @@ func TestNormalizeTaxCombo(t *testing.T) {
 		assert.Equal(t, tax.KeyIntraCommunity, tc.Key)
 	})
 
+}
+
+// SDI rejects split payment on reverse charge VAT with check 00420.
+func TestTaxComboSplitPaymentValidation(t *testing.T) {
+	const msg = "split payment VAT cannot use a reverse charge (N6) nature (SDI check 00420)"
+
+	t.Run("refuses split payment on reverse charge VAT", func(t *testing.T) {
+		inv := testInvoiceStandard(t)
+		inv.Lines[0].Taxes[0] = &tax.Combo{
+			Category: tax.CategoryVAT,
+			Key:      tax.KeyReverseCharge,
+			Ext: tax.ExtensionsOf(cbc.CodeMap{
+				sdi.ExtKeyVATLiability: sdi.ExtCodeVATLiabilitySplitPayment,
+			}),
+		}
+		require.NoError(t, inv.Calculate())
+		assert.ErrorContains(t, rules.Validate(inv), msg)
+	})
+
+	t.Run("allows reverse charge VAT without split payment", func(t *testing.T) {
+		inv := testInvoiceStandard(t)
+		inv.Lines[0].Taxes[0] = &tax.Combo{Category: tax.CategoryVAT, Key: tax.KeyReverseCharge}
+		require.NoError(t, inv.Calculate())
+		err := rules.Validate(inv)
+		if err != nil {
+			assert.NotContains(t, err.Error(), msg)
+		}
+	})
+
+	t.Run("allows split payment on standard VAT", func(t *testing.T) {
+		inv := testInvoiceSplitPayment(t)
+		require.NoError(t, inv.Calculate())
+		assert.NoError(t, rules.Validate(inv))
+	})
 }
