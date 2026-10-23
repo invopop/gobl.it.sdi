@@ -2,6 +2,7 @@ package sdi
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/invopop/gobl/cbc"
 	"github.com/invopop/gobl/l10n"
@@ -118,7 +119,23 @@ func taxComboRules() *rules.Set {
 				),
 			),
 		),
+		rules.Assert("06", "split payment VAT cannot use a reverse charge (N6) nature (SDI check 00420)",
+			is.Func("split payment not on reverse charge", taxComboSplitPaymentNotReverseCharge),
+		),
 	)
+}
+
+// taxComboSplitPaymentNotReverseCharge passes unless the combo marks its VAT
+// as split payment while its nature is reverse charge (N6).
+func taxComboSplitPaymentNotReverseCharge(val any) bool {
+	c, ok := val.(*tax.Combo)
+	if !ok || c == nil {
+		return true
+	}
+	if c.Ext.Get(ExtKeyVATLiability) != ExtCodeVATLiabilitySplitPayment {
+		return true
+	}
+	return !strings.HasPrefix(c.Ext.Get(ExtKeyExempt).String(), "N6")
 }
 
 // taxComboRetainedRateExceedsPercent passes when the statutory rate in the
