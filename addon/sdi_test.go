@@ -10,7 +10,8 @@ import (
 
 // Fault codes are a public contract, so each one must name a single rule.
 // Two branches adding rules at the same time can easily pick the same next
-// number without a merge conflict.
+// number without a merge conflict. Codes are compared in full, as in
+// GOBL-IT-SDI-BILL-INVOICE-71, so the same number on different objects is fine.
 func TestRuleCodesAreUnique(t *testing.T) {
 	seen := make(map[rules.Code]string)
 	var walk func(s *rules.Set)
