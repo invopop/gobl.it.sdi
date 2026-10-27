@@ -209,7 +209,7 @@ func billInvoiceRules() *rules.Set {
 						),
 					),
 					rules.Field("meta",
-						rules.Assert("71", "item unit label must be 1 to 10 Basic Latin characters",
+						rules.Assert("72", "item unit label must be 1 to 10 Basic Latin characters",
 							is.Func("unit label fits UnitaMisura", itemUnitLabelFits),
 						),
 					),
