@@ -1,8 +1,11 @@
 package fatturapa_test
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
+	fatturapa "github.com/invopop/gobl.it.sdi"
 	sdi "github.com/invopop/gobl.it.sdi/addon"
 	"github.com/invopop/gobl.it.sdi/test"
 	"github.com/invopop/gobl/bill"
@@ -319,5 +322,105 @@ func TestPartiesCustomer(t *testing.T) {
 
 		assert.Equal(t, "ACME Corp", c.Identity.Profile.Name)
 		assert.Empty(t, c.Identity.Profile.Given)
+	})
+}
+
+func TestPartiesNamedAfterPerson(t *testing.T) {
+	person := func(prefix, given, surname string) []*org.Person {
+		return []*org.Person{{Name: &org.Name{Prefix: prefix, Given: given, Surname: surname}}}
+	}
+	reconvert := func(t *testing.T, name string) *fatturapa.Invoice {
+		t.Helper()
+		data, err := os.ReadFile(filepath.Join(test.GetDataPath(test.PathFatturaPAGOBL), name))
+		require.NoError(t, err)
+		env, err := test.ConvertToGOBL(data)
+		require.NoError(t, err)
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+		return doc
+	}
+
+	t.Run("should write a supplier named after its person as Nome and Cognome", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Supplier.Name = "Giancarlo Rossi"
+			inv.Supplier.People = person("", "Giancarlo", "Rossi")
+		})
+
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		p := doc.Header.Supplier.Identity.Profile
+		assert.Empty(t, p.Name)
+		assert.Equal(t, "Giancarlo", p.Given)
+		assert.Equal(t, "Rossi", p.Surname)
+	})
+
+	t.Run("should write a customer named after its person with its title", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Customer.Name = "Mario Leoni"
+			inv.Customer.People = person("Dott.", "Mario", "Leoni")
+		})
+
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		p := doc.Header.Customer.Identity.Profile
+		assert.Empty(t, p.Name)
+		assert.Equal(t, "Mario", p.Given)
+		assert.Equal(t, "Leoni", p.Surname)
+		assert.Equal(t, "Dott.", p.Title)
+	})
+
+	t.Run("should write an issuer named after its person as Nome and Cognome", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Ordering = &bill.Ordering{
+				Issuer: &org.Party{
+					Name:   "Mario Rossi",
+					People: person("", "Mario", "Rossi"),
+					TaxID:  &tax.Identity{Country: "IT", Code: "01234567897"},
+				},
+			}
+		})
+
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		p := doc.Header.ThirdPartyIssuer.Identity.Profile
+		assert.Empty(t, p.Name)
+		assert.Equal(t, "Mario", p.Given)
+		assert.Equal(t, "Rossi", p.Surname)
+	})
+
+	t.Run("should keep the company name when it differs from its person", func(t *testing.T) {
+		env := test.LoadTestFile("invoice-simple.json", test.PathGOBLFatturaPA)
+		test.ModifyInvoice(env, func(inv *bill.Invoice) {
+			inv.Supplier.Name = "Rossi Consulting S.r.l."
+			inv.Supplier.People = person("", "Giancarlo", "Rossi")
+		})
+
+		doc, err := test.ConvertFromGOBL(env)
+		require.NoError(t, err)
+
+		p := doc.Header.Supplier.Identity.Profile
+		assert.Equal(t, "Rossi Consulting S.r.l.", p.Name)
+		assert.Empty(t, p.Given)
+	})
+
+	t.Run("should write a parsed customer back as Nome and Cognome", func(t *testing.T) {
+		p := reconvert(t, "invoice-irpef.xml").Header.Customer.Identity.Profile
+		assert.Empty(t, p.Name)
+		assert.Equal(t, "MARIO", p.Given)
+		assert.Equal(t, "LEONI", p.Surname)
+		assert.Equal(t, "Dott.", p.Title)
+	})
+
+	t.Run("should write a parsed issuer back as Nome and Cognome", func(t *testing.T) {
+		p := reconvert(t, "invoice-intermediary.xml").Header.ThirdPartyIssuer.Identity.Profile
+		assert.Empty(t, p.Name)
+		assert.Equal(t, "MARIO", p.Given)
+		assert.Equal(t, "ROSSI", p.Surname)
 	})
 }

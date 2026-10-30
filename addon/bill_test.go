@@ -209,6 +209,41 @@ func TestInvoiceNormalization(t *testing.T) {
 }
 
 func TestSupplierValidation(t *testing.T) {
+	t.Run("supplier named after its person with a short title", func(t *testing.T) {
+		inv := testInvoiceStandard(t)
+		inv.Supplier.Name = "Mario Rossi"
+		inv.Supplier.People = []*org.Person{{Name: &org.Name{Prefix: "Dott.", Given: "Mario", Surname: "Rossi"}}}
+		require.NoError(t, inv.Calculate())
+		assert.NoError(t, rules.Validate(inv))
+	})
+
+	t.Run("supplier named after its person with a long title", func(t *testing.T) {
+		inv := testInvoiceStandard(t)
+		inv.Supplier.Name = "Mario Rossi"
+		inv.Supplier.People = []*org.Person{{Name: &org.Name{Prefix: "Dottore Commercialista", Given: "Mario", Surname: "Rossi"}}}
+		require.NoError(t, inv.Calculate())
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "supplier person title must be 2 to 10 printable ASCII characters")
+	})
+
+	t.Run("supplier named after its person with a long given name", func(t *testing.T) {
+		inv := testInvoiceStandard(t)
+		given := strings.Repeat("M", 61)
+		inv.Supplier.Name = given + " Rossi"
+		inv.Supplier.People = []*org.Person{{Name: &org.Name{Given: given, Surname: "Rossi"}}}
+		require.NoError(t, inv.Calculate())
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "supplier person given name and surname must be at most 60 characters each")
+	})
+
+	t.Run("supplier name longer than 80 characters", func(t *testing.T) {
+		inv := testInvoiceStandard(t)
+		inv.Supplier.Name = strings.Repeat("S", 81)
+		require.NoError(t, inv.Calculate())
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "supplier name must be at most 80 characters")
+	})
+
 	t.Run("with supplier registration details", func(t *testing.T) {
 		inv := testInvoiceStandard(t)
 		inv.Supplier.Registration = &org.Registration{
@@ -368,6 +403,70 @@ func TestCustomerValidation(t *testing.T) {
 		assert.ErrorContains(t, err, "customer people are required when name is empty")
 	})
 
+	privateCustomer := func(t *testing.T, name *org.Name) *bill.Invoice {
+		inv := testInvoiceStandard(t)
+		inv.Customer.TaxID.Code = ""
+		inv.Customer.Name = ""
+		inv.Customer.Identities = append(inv.Customer.Identities, id)
+		inv.Customer.People = []*org.Person{{Name: name}}
+		return inv
+	}
+
+	t.Run("customer person with full name and title", func(t *testing.T) {
+		inv := privateCustomer(t, &org.Name{Prefix: "Dott.", Given: "Mario", Surname: "Rossi"})
+		require.NoError(t, inv.Calculate())
+		assert.NoError(t, rules.Validate(inv))
+	})
+
+	t.Run("customer name takes the place of its people", func(t *testing.T) {
+		inv := testInvoiceStandard(t)
+		inv.Customer.People = []*org.Person{{Name: &org.Name{Surname: "Rossi", Prefix: "Dottore Commercialista"}}}
+		require.NoError(t, inv.Calculate())
+		assert.NoError(t, rules.Validate(inv))
+	})
+
+	t.Run("customer person with only a given name", func(t *testing.T) {
+		inv := privateCustomer(t, &org.Name{Given: "Mario"})
+		require.NoError(t, inv.Calculate())
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "customer person needs a given name and a surname when the customer has no name")
+	})
+
+	t.Run("customer person name with non-latin characters", func(t *testing.T) {
+		inv := privateCustomer(t, &org.Name{Given: "Mario", Surname: "日本"})
+		require.NoError(t, inv.Calculate())
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "customer person name must use Latin-1 characters")
+	})
+
+	t.Run("customer person title longer than 10 characters", func(t *testing.T) {
+		inv := privateCustomer(t, &org.Name{Prefix: "Dottore Commercialista", Given: "Mario", Surname: "Rossi"})
+		require.NoError(t, inv.Calculate())
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "customer person title must be 2 to 10 printable ASCII characters")
+	})
+
+	t.Run("customer name longer than 80 characters", func(t *testing.T) {
+		inv := testInvoiceStandard(t)
+		inv.Customer.Name = strings.Repeat("C", 81)
+		require.NoError(t, inv.Calculate())
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "customer name must be at most 80 characters")
+	})
+
+	t.Run("customer person given name longer than 60 characters", func(t *testing.T) {
+		inv := privateCustomer(t, &org.Name{Given: strings.Repeat("M", 61), Surname: "Rossi"})
+		require.NoError(t, inv.Calculate())
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "customer person given name and surname must be at most 60 characters each")
+	})
+
+	t.Run("customer person title outside ASCII", func(t *testing.T) {
+		inv := privateCustomer(t, &org.Name{Prefix: "Mª", Given: "Maria", Surname: "Rossi"})
+		require.NoError(t, inv.Calculate())
+		err := rules.Validate(inv)
+		assert.ErrorContains(t, err, "customer person title must be 2 to 10 printable ASCII characters")
+	})
 }
 
 func TestSupplierTelephoneValidation(t *testing.T) {
