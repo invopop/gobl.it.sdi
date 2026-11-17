@@ -5,14 +5,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io"
 	"regexp"
 	"strings"
 
 	"encoding/xml"
 
 	"golang.org/x/text/encoding/charmap"
-	"golang.org/x/text/transform"
 
 	"github.com/invopop/gobl"
 	sdi "github.com/invopop/gobl.it.sdi/addon"
@@ -260,21 +258,24 @@ func convertToUTF8(doc []byte) ([]byte, error) {
 		return doc, nil
 	}
 
-	// Handle windows-1252 encoding
-	if strings.EqualFold(encoding, "windows-1252") {
-		decoder := charmap.Windows1252.NewDecoder()
-		reader := transform.NewReader(bytes.NewReader(doc), decoder)
-		converted, err := io.ReadAll(reader)
-		if err != nil {
-			return nil, fmt.Errorf("failed to convert from windows-1252: %w", err)
-		}
-		// Replace the encoding declaration with UTF-8
-		converted = replaceEncodingDeclaration(converted, "UTF-8")
-		return converted, nil
+	charset, ok := charsets[strings.ToLower(encoding)]
+	if !ok {
+		return nil, fmt.Errorf("unsupported encoding: %s", encoding)
 	}
+	converted, err := charset.NewDecoder().Bytes(doc)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert from %s: %w", encoding, err)
+	}
+	return replaceEncodingDeclaration(converted, "UTF-8"), nil
+}
 
-	// Add more encodings as needed
-	return nil, fmt.Errorf("unsupported encoding: %s", encoding)
+// charsets maps the lower-case XML encoding labels we accept besides UTF-8 to
+// their character sets.
+var charsets = map[string]*charmap.Charmap{
+	"windows-1252": charmap.Windows1252,
+	// Files labelled ISO-8859-1 often hold windows-1252 characters such as €.
+	"iso-8859-1":  charmap.Windows1252,
+	"iso-8859-15": charmap.ISO8859_15,
 }
 
 // detectEncoding extracts the encoding attribute from the XML declaration

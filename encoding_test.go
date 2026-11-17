@@ -45,6 +45,49 @@ func TestConvertToUTF8(t *testing.T) {
 	})
 }
 
+func TestConvertLatinToUTF8(t *testing.T) {
+	tests := []struct {
+		name     string
+		label    string
+		body     string
+		expected string
+	}{
+		{
+			name:     "ISO-8859-1",
+			label:    "ISO-8859-1",
+			body:     "Qt\xE0",
+			expected: "Qtà",
+		},
+		{
+			name:     "lowercase iso-8859-1",
+			label:    "iso-8859-1",
+			body:     "Qt\xE0",
+			expected: "Qtà",
+		},
+		{
+			name:     "ISO-8859-1 reads 0x80 as the windows-1252 euro sign",
+			label:    "ISO-8859-1",
+			body:     "10 \x80",
+			expected: "10 €",
+		},
+		{
+			name:     "ISO-8859-15 reads 0xA4 as the euro sign",
+			label:    "ISO-8859-15",
+			body:     "10 \xA4",
+			expected: "10 €",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			input := []byte(`<?xml version="1.0" encoding="` + tt.label + `"?><root>` + tt.body + `</root>`)
+			output, err := convertToUTF8(input)
+			require.NoError(t, err)
+			assert.Equal(t, `<?xml version="1.0" encoding="UTF-8"?><root>`+tt.expected+`</root>`, string(output))
+		})
+	}
+}
+
 func TestDetectEncoding(t *testing.T) {
 	tests := []struct {
 		name     string
