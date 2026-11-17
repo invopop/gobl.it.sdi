@@ -4,7 +4,9 @@ package test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"os"
 	"path"
@@ -18,8 +20,8 @@ import (
 	"github.com/invopop/gobl/l10n"
 	"github.com/invopop/gobl/schema"
 	"github.com/invopop/xmldsig"
-	"github.com/lestrrat-go/libxml2"
-	"github.com/lestrrat-go/libxml2/xsd"
+	"github.com/lestrrat-go/helium"
+	"github.com/lestrrat-go/helium/xsd"
 )
 
 const (
@@ -132,23 +134,24 @@ func LoadTestFile(file string, testPath string) *gobl.Envelope {
 
 // LoadSchema loads a XSD schema for validating XML documents
 func LoadSchema() (*xsd.Schema, error) {
-	schemaPath := filepath.Join("schemas", "FatturaPA_v1.2.3.xsd")
-	schema, err := xsd.ParseFromFile(schemaPath)
-	if err != nil {
-		return nil, err
-	}
-
-	return schema, nil
+	return loadSchema("FatturaPA_v1.2.3.xsd")
 }
 
 // LoadSimplifiedSchema loads the XSD schema for validating simplified invoices
 func LoadSimplifiedSchema() (*xsd.Schema, error) {
-	schemaPath := filepath.Join("schemas", "SVFSM10_v1.0.2.xsd")
-	schema, err := xsd.ParseFromFile(schemaPath)
-	if err != nil {
-		return nil, err
-	}
+	return loadSchema("SVFSM10_v1.0.2.xsd")
+}
 
+func loadSchema(name string) (*xsd.Schema, error) {
+	ctx := context.Background()
+	collector := helium.NewErrorCollector(ctx, helium.ErrorLevelNone)
+	schema, err := xsd.NewCompiler().
+		FS(helium.PermissiveFS()).
+		ErrorHandler(collector).
+		CompileFile(ctx, filepath.Join("schemas", name))
+	if err != nil {
+		return nil, errors.Join(append(collector.Errors(), err)...)
+	}
 	return schema, nil
 }
 
@@ -189,14 +192,18 @@ func LoadOptionsWithoutTransmitter() []fatturapa.Option {
 
 // ValidateXML validates an XML document against a XSD schema
 func ValidateXML(schema *xsd.Schema, doc []byte) []error {
-	xmlDoc, err := libxml2.ParseString(string(doc))
+	ctx := context.Background()
+	xmlDoc, err := helium.NewParser().Parse(ctx, doc)
 	if err != nil {
 		return []error{err}
 	}
 
-	err = schema.Validate(xmlDoc)
-	if err != nil {
-		return err.(xsd.SchemaValidationError).Errors()
+	collector := helium.NewErrorCollector(ctx, helium.ErrorLevelNone)
+	if err := xsd.NewValidator(schema).ErrorHandler(collector).Validate(ctx, xmlDoc); err != nil {
+		if errs := collector.Errors(); len(errs) > 0 {
+			return errs
+		}
+		return []error{err}
 	}
 
 	return nil
