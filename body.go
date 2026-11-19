@@ -304,6 +304,9 @@ func extractPriceAdjustments(inv *bill.Invoice) []*PriceAdjustment {
 	var priceAdjustments []*PriceAdjustment
 
 	for _, discount := range inv.Discounts {
+		if discountIsLine(discount) {
+			continue
+		}
 		priceAdjustments = append(priceAdjustments, &PriceAdjustment{
 			Type:    scontoMaggiorazioneTypeDiscount,
 			Percent: formatPercentage(discount.Percent),
@@ -312,7 +315,7 @@ func extractPriceAdjustments(inv *bill.Invoice) []*PriceAdjustment {
 	}
 
 	for _, charge := range inv.Charges {
-		if !charge.Key.Has(bill.ChargeKeyStampDuty) && !charge.Key.Has(sdi.KeyFundContribution) {
+		if !charge.Key.Has(bill.ChargeKeyStampDuty) && !charge.Key.Has(sdi.KeyFundContribution) && !chargeIsLine(charge) {
 			priceAdjustments = append(priceAdjustments, &PriceAdjustment{
 				Type:    scontoMaggiorazioneTypeCharge,
 				Percent: formatPercentage(charge.Percent),

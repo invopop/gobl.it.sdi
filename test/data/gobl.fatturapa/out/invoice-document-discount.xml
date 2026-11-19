@@ -1,0 +1,186 @@
+<p:FatturaElettronica xmlns:p="http://ivaservizi.agenziaentrate.gov.it/docs/xsd/fatture/v1.2" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" versione="FPR12" xsi:schemaLocation="http://ivaservizi.agenziaentrate.gov.it/docs/xsd/fatture/v1.2 https://www.fatturapa.gov.it/export/documenti/fatturapa/v1.2.2/Schema_del_file_xml_FatturaPA_v1.2.2.xsd">
+	<FatturaElettronicaHeader>
+		<DatiTrasmissione>
+			<IdTrasmittente>
+				<IdPaese>IT</IdPaese>
+				<IdCodice>01234567890</IdCodice>
+			</IdTrasmittente>
+			<ProgressivoInvio>01a1f3a4</ProgressivoInvio>
+			<FormatoTrasmissione>FPR12</FormatoTrasmissione>
+			<CodiceDestinatario>M5UXCR5</CodiceDestinatario>
+		</DatiTrasmissione>
+		<CedentePrestatore>
+			<DatiAnagrafici>
+				<IdFiscaleIVA>
+					<IdPaese>IT</IdPaese>
+					<IdCodice>12345678903</IdCodice>
+				</IdFiscaleIVA>
+				<Anagrafica>
+					<Denominazione>Trattoria California</Denominazione>
+				</Anagrafica>
+				<RegimeFiscale>RF01</RegimeFiscale>
+			</DatiAnagrafici>
+			<Sede>
+				<Indirizzo>Via California</Indirizzo>
+				<NumeroCivico>102</NumeroCivico>
+				<CAP>33213</CAP>
+				<Comune>Palermo</Comune>
+				<Provincia>PA</Provincia>
+				<Nazione>IT</Nazione>
+			</Sede>
+			<IscrizioneREA>
+				<Ufficio>RM</Ufficio>
+				<NumeroREA>123456</NumeroREA>
+				<StatoLiquidazione>LN</StatoLiquidazione>
+			</IscrizioneREA>
+			<Contatti></Contatti>
+		</CedentePrestatore>
+		<CessionarioCommittente>
+			<DatiAnagrafici>
+				<IdFiscaleIVA>
+					<IdPaese>IT</IdPaese>
+					<IdCodice>13029381004</IdCodice>
+				</IdFiscaleIVA>
+				<Anagrafica>
+					<Denominazione>Mela S.r.l.</Denominazione>
+				</Anagrafica>
+			</DatiAnagrafici>
+			<Sede>
+				<Indirizzo>Via dei Mille</Indirizzo>
+				<NumeroCivico>23</NumeroCivico>
+				<CAP>00100</CAP>
+				<Comune>Firenze</Comune>
+				<Provincia>FI</Provincia>
+				<Nazione>IT</Nazione>
+			</Sede>
+		</CessionarioCommittente>
+	</FatturaElettronicaHeader>
+	<FatturaElettronicaBody>
+		<DatiGenerali>
+			<DatiGeneraliDocumento>
+				<TipoDocumento>TD01</TipoDocumento>
+				<Divisa>EUR</Divisa>
+				<Data>2023-05-21</Data>
+				<Numero>SAMPLE-014</Numero>
+				<ImportoTotaleDocumento>110.00</ImportoTotaleDocumento>
+			</DatiGeneraliDocumento>
+		</DatiGenerali>
+		<DatiBeniServizi>
+			<DettaglioLinee>
+				<NumeroLinea>1</NumeroLinea>
+				<Descrizione>Menu degustazione</Descrizione>
+				<Quantita>2.00</Quantita>
+				<PrezzoUnitario>40.9091</PrezzoUnitario>
+				<PrezzoTotale>81.8182</PrezzoTotale>
+				<AliquotaIVA>10.00</AliquotaIVA>
+			</DettaglioLinee>
+			<DettaglioLinee>
+				<NumeroLinea>2</NumeroLinea>
+				<Descrizione>Vino rosso</Descrizione>
+				<Quantita>1.00</Quantita>
+				<PrezzoUnitario>22.9508</PrezzoUnitario>
+				<PrezzoTotale>22.9508</PrezzoTotale>
+				<AliquotaIVA>22.00</AliquotaIVA>
+			</DettaglioLinee>
+			<DettaglioLinee>
+				<NumeroLinea>3</NumeroLinea>
+				<TipoCessionePrestazione>AC</TipoCessionePrestazione>
+				<Descrizione>Coperto</Descrizione>
+				<PrezzoUnitario>5.45</PrezzoUnitario>
+				<PrezzoTotale>5.45</PrezzoTotale>
+				<AliquotaIVA>10.00</AliquotaIVA>
+			</DettaglioLinee>
+			<DettaglioLinee>
+				<NumeroLinea>4</NumeroLinea>
+				<TipoCessionePrestazione>SC</TipoCessionePrestazione>
+				<Descrizione>Sconto fedeltà</Descrizione>
+				<PrezzoUnitario>-8.18</PrezzoUnitario>
+				<PrezzoTotale>-8.18</PrezzoTotale>
+				<AliquotaIVA>10.00</AliquotaIVA>
+			</DettaglioLinee>
+			<DettaglioLinee>
+				<NumeroLinea>5</NumeroLinea>
+				<TipoCessionePrestazione>SC</TipoCessionePrestazione>
+				<Descrizione>Sconto vino</Descrizione>
+				<PrezzoUnitario>-4.10</PrezzoUnitario>
+				<PrezzoTotale>-4.10</PrezzoTotale>
+				<AliquotaIVA>22.00</AliquotaIVA>
+			</DettaglioLinee>
+			<DatiRiepilogo>
+				<AliquotaIVA>10.00</AliquotaIVA>
+				<ImponibileImporto>79.09</ImponibileImporto>
+				<Imposta>7.91</Imposta>
+			</DatiRiepilogo>
+			<DatiRiepilogo>
+				<AliquotaIVA>22.00</AliquotaIVA>
+				<ImponibileImporto>18.85</ImponibileImporto>
+				<Imposta>4.15</Imposta>
+			</DatiRiepilogo>
+		</DatiBeniServizi>
+	</FatturaElettronicaBody>
+	<ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="Signature-01a1f3a4-f83d-7a1a-95e4-8fde44f08c0e-Signature">
+		<ds:SignedInfo>
+			<ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod>
+			<ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></ds:SignatureMethod>
+			<ds:Reference Id="Reference-01a1f3a4-f83d-7a1a-95e4-8fde44f08c0e" Type="http://www.w3.org/2000/09/xmldsig#Object" URI="">
+				<ds:Transforms>
+					<ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform>
+				</ds:Transforms>
+				<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha512"></ds:DigestMethod>
+				<ds:DigestValue>QB1rMvK5McvMhAbF4FM/otu3SCrqC1vLnRz8uwKs3WMIdfc3Ww9Tg1NsaPJcZj1UBn1WV/IDA2q9n7O/bCWLdQ==</ds:DigestValue>
+			</ds:Reference>
+			<ds:Reference URI="#Certificate-01a1f3a4-f83d-7a1a-95e4-8fde44f08c0e">
+				<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha512"></ds:DigestMethod>
+				<ds:DigestValue>ktftN5LlIUbweB7m11hWyFEVfk2o+03LnK1S2KOsY4lsR+v6TpuAKeoF9COUm78dH4ELUZPz/Xm+EKoDFtxXzg==</ds:DigestValue>
+			</ds:Reference>
+			<ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#Signature-01a1f3a4-f83d-7a1a-95e4-8fde44f08c0e-SignedProperties">
+				<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha512"></ds:DigestMethod>
+				<ds:DigestValue>xKr/AkwWTKtkBOO6riRjiMtkZAGaOGAnlYkke47CqA8thf38ofo5uO6tYqKdkEfI7gY+T/H6dO1Qr+MZlR967Q==</ds:DigestValue>
+			</ds:Reference>
+		</ds:SignedInfo>
+		<ds:SignatureValue Id="Signature-01a1f3a4-f83d-7a1a-95e4-8fde44f08c0e-SignatureValue">TIP37oS2vCh7Q/2ULW+pMyFifjAGtUumJzyqc7oXlhoaf3OWjUGz5GDjk0TflBXbaliKcPHfa6KnjtePB0THvrgv4+jIScYr2eXOw0ZaBr9EkT4GiVFgtOuVhdpl+jVMPOCy0U99iG+WEvi5tCT3t33iHH3nuyTDeX3Z0CYpSShYDPBuUQGC4AwkN7gqdolUXiJSfQB1wf6F1U+uF33h1O+gBJSTZOjnEk+mO+3oyhrwMQAS/oaP4kXpa0SHfMySKpTRwfXFxoCYkahrtnl4O3VIrvRlWOOcx1OGk8AwNijMPSNQI/uEV7ZsbdKcGUPGZenblIPjT4miI7HVIKPgFQ==</ds:SignatureValue>
+		<ds:KeyInfo Id="Certificate-01a1f3a4-f83d-7a1a-95e4-8fde44f08c0e">
+			<ds:X509Data>
+				<ds:X509Certificate>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</ds:X509Certificate>
+			</ds:X509Data>
+			<ds:KeyValue>
+				<ds:RSAKeyValue>
+					<ds:Modulus>ujAnB2L5X2Bm42S5f/axKFu1QsAcZGJAeYELZZJ04jriBu3E8V3Rus3tUxfQ+ylqBm0bNWgHfP+gekosHaYoJNQmAVBuwpd183uHksTRUtbeOAFS2xd7v29stM7ARkec+WVV+SK8G6HECIB0VIAMoB2tVs0y6XRVRcjE4I7kH1h3ZbMIzvW43B4hxruYtXcvozGwvZpxQKVrjEY8IXH5+aXHM8WLCba4I06FyhvI+2/9WUPN2YvDoml7lQM4edgepTEZifq2ZPHGpCC5NhSXj2ab5FtnGTMgUaWH6tCljT0kOdfJBOHnIWOw4dBdgkik2CuxwGyMrq/P5VqQIC2hXQ==</ds:Modulus>
+					<ds:Exponent>AQAB</ds:Exponent>
+				</ds:RSAKeyValue>
+			</ds:KeyValue>
+		</ds:KeyInfo>
+		<ds:Object>
+			<xades:QualifyingProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="Signature-01a1f3a4-f83d-7a1a-95e4-8fde44f08c0e-QualifyingProperties" Target="#Signature-01a1f3a4-f83d-7a1a-95e4-8fde44f08c0e-Signature">
+				<xades:SignedProperties Id="Signature-01a1f3a4-f83d-7a1a-95e4-8fde44f08c0e-SignedProperties">
+					<xades:SignedSignatureProperties>
+						<xades:SigningTime>2022-02-01T04:00:00+00:00</xades:SigningTime>
+						<xades:SigningCertificate>
+							<xades:Cert>
+								<xades:CertDigest>
+									<ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha512"></ds:DigestMethod>
+									<ds:DigestValue>VmNYwDiCBBXJX/IL1AUYj7uHouM2Jcp3ZkeqmB+FKGTTwXIIZnCWmZVhCSB7uNoV6Xee7nZVkMqeCMQk3tGR0g==</ds:DigestValue>
+								</xades:CertDigest>
+								<xades:IssuerSerial>
+									<ds:X509IssuerName>CN=AC FNMT Usuarios,OU=Ceres,O=FNMT-RCM,C=ES</ds:X509IssuerName>
+									<ds:X509SerialNumber>96891622000445695554354105786026700712</ds:X509SerialNumber>
+								</xades:IssuerSerial>
+							</xades:Cert>
+						</xades:SigningCertificate>
+					</xades:SignedSignatureProperties>
+					<xades:SignedDataObjectProperties>
+						<xades:DataObjectFormat ObjectReference="#Reference-01a1f3a4-f83d-7a1a-95e4-8fde44f08c0e">
+							<xades:Description>Fattura PA</xades:Description>
+							<xades:ObjectIdentifier>
+								<xades:Identifier Qualifier="OIDAsURN">urn:oid:1.2.840.10003.5.109.10</xades:Identifier>
+								<xades:Description></xades:Description>
+							</xades:ObjectIdentifier>
+							<xades:MimeType>text/xml</xades:MimeType>
+							<xades:Encoding></xades:Encoding>
+						</xades:DataObjectFormat>
+					</xades:SignedDataObjectProperties>
+				</xades:SignedProperties>
+			</xades:QualifyingProperties>
+		</ds:Object>
+	</ds:Signature>
+</p:FatturaElettronica>
