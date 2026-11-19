@@ -187,21 +187,22 @@ func newThirdPartyIssuer(p *org.Party) *ThirdPartyIssuer {
 	return &ThirdPartyIssuer{Identity: id}
 }
 
+// newProfile writes a party named after its first person, or with no name of
+// its own, as Nome and Cognome, and any other party as Denominazione.
 func newProfile(party *org.Party) *Profile {
-	// A company may not have a tax ID if they have a codice fiscale
-	// This means that we need to assume that it's a company if it has a name
+	if len(party.People) > 0 && party.People[0].Name != nil {
+		name := party.People[0].Name
+		if party.Name == "" || party.Name == name.Given+" "+name.Surname {
+			return &Profile{
+				Given:   name.Given,
+				Surname: name.Surname,
+				Title:   name.Prefix,
+			}
+		}
+	}
 	if party.Name != "" {
 		return &Profile{
 			Name: party.Name,
-		}
-	}
-	// not a company
-	if len(party.People) > 0 {
-		name := party.People[0].Name
-		return &Profile{
-			Given:   name.Given,
-			Surname: name.Surname,
-			Title:   name.Prefix,
 		}
 	}
 
