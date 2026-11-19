@@ -92,6 +92,10 @@ func simplifiedInvoiceRules() rules.Def {
 						tax.SetHasCategory(tax.CategoryVAT),
 					),
 				),
+				// The format lists stamp duty as an entry, with the reason as its Descrizione
+				rules.Assert("75", "simplified invoice stamp duty reason must be at most 1000 Latin-1 characters",
+					is.Func("reason fits Descrizione", stampDutyReasonFits),
+				),
 			),
 		),
 		rules.Field("discounts",
