@@ -1,0 +1,192 @@
+{
+	"$schema": "https://gobl.org/draft-0/envelope",
+	"head": {
+		"uuid": "01a1f3a4-f83d-7a1a-95e4-8fde44f08c0e",
+		"dig": {
+			"alg": "sha256",
+			"val": "50ee7a8b28a7c0eb4f80864f70064d77b4cba7b4dc2080fcfa2d40affd0d9360"
+		}
+	},
+	"doc": {
+		"$schema": "https://gobl.org/draft-0/bill/invoice",
+		"$regime": "IT",
+		"$addons": [
+			"it-sdi-v1"
+		],
+		"uuid": "019a9c1e-5d3b-7c1e-9f41-6a0c1d2e3f40",
+		"type": "standard",
+		"series": "SAMPLE",
+		"code": "014",
+		"issue_date": "2023-05-21",
+		"currency": "EUR",
+		"tax": {
+			"prices_include": "VAT",
+			"ext": {
+				"it-sdi-document-type": "TD01",
+				"it-sdi-format": "FPR12"
+			}
+		},
+		"supplier": {
+			"name": "Trattoria California",
+			"tax_id": {
+				"country": "IT",
+				"code": "12345678903"
+			},
+			"addresses": [
+				{
+					"num": "102",
+					"street": "Via California",
+					"locality": "Palermo",
+					"region": "PA",
+					"code": "33213",
+					"country": "IT"
+				}
+			],
+			"registration": {
+				"currency": "EUR",
+				"office": "RM",
+				"entry": "123456"
+			},
+			"ext": {
+				"it-sdi-fiscal-regime": "RF01"
+			}
+		},
+		"customer": {
+			"name": "Mela S.r.l.",
+			"tax_id": {
+				"country": "IT",
+				"code": "13029381004"
+			},
+			"inboxes": [
+				{
+					"key": "it-sdi-code",
+					"code": "M5UXCR5"
+				}
+			],
+			"addresses": [
+				{
+					"num": "23",
+					"street": "Via dei Mille",
+					"locality": "Firenze",
+					"region": "FI",
+					"code": "00100",
+					"country": "IT"
+				}
+			]
+		},
+		"lines": [
+			{
+				"i": 1,
+				"quantity": "2",
+				"item": {
+					"name": "Menu degustazione",
+					"price": "45.00"
+				},
+				"sum": "90.00",
+				"taxes": [
+					{
+						"cat": "VAT",
+						"key": "standard",
+						"rate": "intermediate",
+						"percent": "10.0%"
+					}
+				],
+				"total": "90.00"
+			},
+			{
+				"i": 2,
+				"quantity": "1",
+				"item": {
+					"name": "Vino rosso",
+					"price": "28.00"
+				},
+				"sum": "28.00",
+				"taxes": [
+					{
+						"cat": "VAT",
+						"key": "standard",
+						"rate": "general",
+						"percent": "22.0%"
+					}
+				],
+				"total": "28.00"
+			}
+		],
+		"discounts": [
+			{
+				"i": 1,
+				"reason": "Sconto fedeltà",
+				"amount": "9.00",
+				"taxes": [
+					{
+						"cat": "VAT",
+						"key": "standard",
+						"rate": "intermediate",
+						"percent": "10.0%"
+					}
+				]
+			},
+			{
+				"i": 2,
+				"reason": "Sconto vino",
+				"amount": "5.00",
+				"taxes": [
+					{
+						"cat": "VAT",
+						"key": "standard",
+						"rate": "general",
+						"percent": "22.0%"
+					}
+				]
+			}
+		],
+		"charges": [
+			{
+				"i": 1,
+				"reason": "Coperto",
+				"amount": "6.00",
+				"taxes": [
+					{
+						"cat": "VAT",
+						"key": "standard",
+						"rate": "intermediate",
+						"percent": "10.0%"
+					}
+				]
+			}
+		],
+		"totals": {
+			"sum": "118.00",
+			"discount": "14.00",
+			"charge": "6.00",
+			"tax_included": "12.06",
+			"total": "97.94",
+			"taxes": {
+				"categories": [
+					{
+						"code": "VAT",
+						"rates": [
+							{
+								"key": "standard",
+								"base": "79.09",
+								"percent": "10.0%",
+								"amount": "7.91"
+							},
+							{
+								"key": "standard",
+								"base": "18.85",
+								"percent": "22.0%",
+								"amount": "4.15"
+							}
+						],
+						"amount": "12.06"
+					}
+				],
+				"sum": "12.06"
+			},
+			"tax": "12.06",
+			"total_with_tax": "110.00",
+			"payable": "110.00"
+		}
+	}
+}

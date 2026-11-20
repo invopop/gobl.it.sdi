@@ -221,6 +221,20 @@ func billInvoiceRules() *rules.Set {
 				),
 			),
 		),
+		rules.Field("discounts",
+			rules.Each(
+				rules.Assert("73", "discount reason must be at most 1000 Latin-1 characters when the discount has VAT",
+					is.Func("reason fits Descrizione", discountReasonFits),
+				),
+			),
+		),
+		rules.Field("charges",
+			rules.Each(
+				rules.Assert("74", "charge reason must be at most 1000 Latin-1 characters when the charge has VAT",
+					is.Func("reason fits Descrizione", chargeReasonFits),
+				),
+			),
+		),
 		// Ordering despatch validation
 		rules.When(is.Func("has deferred tag", invoiceHasDeferredTag),
 			rules.Field("ordering",
@@ -625,6 +639,44 @@ func orderingRefsFit(val any) bool {
 
 // itemUnitLabelFits checks that a unit label kept in the item meta fits
 // UnitaMisura, where the FatturaPA conversion writes it.
+// discountReasonFits checks the reason of a discount with VAT, which becomes
+// the Descrizione of a line.
+func discountReasonFits(val any) bool {
+	d, ok := val.(*bill.Discount)
+	if !ok || d == nil || d.Taxes.Get(tax.CategoryVAT) == nil {
+		return true
+	}
+	return fitsDescrizione(d.Reason)
+}
+
+// chargeReasonFits checks the reason of a charge with VAT, which becomes the
+// Descrizione of a line. Stamp duty and fund contributions have their own
+// elements.
+func chargeReasonFits(val any) bool {
+	c, ok := val.(*bill.Charge)
+	if !ok || c == nil || c.Taxes.Get(tax.CategoryVAT) == nil {
+		return true
+	}
+	if c.Key.Has(bill.ChargeKeyStampDuty) || c.Key.Has(KeyFundContribution) {
+		return true
+	}
+	return fitsDescrizione(c.Reason)
+}
+
+// stampDutyReasonFits checks the reason of a stamp duty charge.
+func stampDutyReasonFits(val any) bool {
+	c, ok := val.(*bill.Charge)
+	if !ok || c == nil || !c.Key.Has(bill.ChargeKeyStampDuty) {
+		return true
+	}
+	return fitsDescrizione(c.Reason)
+}
+
+// fitsDescrizione matches FatturaPA's String1000LatinType.
+func fitsDescrizione(text string) bool {
+	return utf8.RuneCountInString(text) <= 1000 && validateLatin1String(text) == nil
+}
+
 func itemUnitLabelFits(val any) bool {
 	meta, _ := val.(cbc.Meta)
 	label := meta[MetaKeyUnitLabel]

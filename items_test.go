@@ -339,3 +339,57 @@ func TestDettaglioLineeRiferimentoAmministrazione(t *testing.T) {
 		}
 	})
 }
+
+func TestDettaglioLineeDocumentDiscountsAndCharges(t *testing.T) {
+	env := test.LoadTestFile("invoice-document-discount.json", test.PathGOBLFatturaPA)
+	doc, err := test.ConvertFromGOBL(env)
+	require.NoError(t, err)
+	body := doc.Body[0]
+
+	t.Run("should write a charge with VAT as an accessory charge line", func(t *testing.T) {
+		dl := body.GoodsServices.LineDetails[2]
+
+		assert.Equal(t, "3", dl.LineNumber)
+		assert.Equal(t, "AC", dl.SaleType)
+		assert.Equal(t, "Coperto", dl.Description)
+		assert.Empty(t, dl.Quantity)
+		assert.Equal(t, "5.45", dl.UnitPrice)
+		assert.Equal(t, "5.45", dl.TotalPrice)
+		assert.Equal(t, "10.00", dl.TaxRate)
+	})
+
+	t.Run("should write a discount with VAT as a negative discount line", func(t *testing.T) {
+		dl := body.GoodsServices.LineDetails[3]
+
+		assert.Equal(t, "4", dl.LineNumber)
+		assert.Equal(t, "SC", dl.SaleType)
+		assert.Equal(t, "Sconto fedeltà", dl.Description)
+		assert.Empty(t, dl.Quantity)
+		assert.Equal(t, "-8.18", dl.UnitPrice)
+		assert.Equal(t, "-8.18", dl.TotalPrice)
+		assert.Equal(t, "10.00", dl.TaxRate)
+
+		dl = body.GoodsServices.LineDetails[4]
+
+		assert.Equal(t, "5", dl.LineNumber)
+		assert.Equal(t, "SC", dl.SaleType)
+		assert.Equal(t, "22.00", dl.TaxRate)
+	})
+
+	t.Run("should not repeat them in the document's general data", func(t *testing.T) {
+		assert.Empty(t, body.GeneralData.Document.PriceAdjustments)
+	})
+
+	t.Run("should add up the lines of each VAT rate to its taxable amount", func(t *testing.T) {
+		sums := make(map[string]num.Amount)
+		for _, dl := range body.GoodsServices.LineDetails {
+			a, err := num.AmountFromString(dl.TotalPrice)
+			require.NoError(t, err)
+			sums[dl.TaxRate] = sums[dl.TaxRate].MatchPrecision(a).Add(a)
+		}
+		require.Len(t, body.GoodsServices.TaxSummary, 2)
+		for _, ts := range body.GoodsServices.TaxSummary {
+			assert.Equal(t, ts.TaxableAmount, sums[ts.TaxRate].Rescale(2).String(), "VAT rate %s", ts.TaxRate)
+		}
+	})
+}

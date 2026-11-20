@@ -8,6 +8,7 @@ import (
 	"github.com/invopop/gobl/bill"
 	"github.com/invopop/gobl/catalogues/untdid"
 	"github.com/invopop/gobl/i18n"
+	"github.com/invopop/gobl/num"
 	"github.com/invopop/gobl/org"
 	"github.com/invopop/gobl/tax"
 )
@@ -16,6 +17,9 @@ const (
 	naturaN21               = "N2.1"
 	tipoDatoINVCONT         = "INVCONT"
 	riferimentoTestoINVCONT = "Inversione contabile - art. 21 c.6 bis lett. a) DPR 633/72"
+
+	tipoCessionePrestazioneDiscount = "SC" // sconto
+	tipoCessionePrestazioneCharge   = "AC" // spesa accessoria
 )
 
 // GoodsServices contains all data related to the goods and services sold.
@@ -27,8 +31,9 @@ type GoodsServices struct {
 // LineDetail contains line data such as description, quantity, price, etc.
 type LineDetail struct {
 	LineNumber       string             `xml:"NumeroLinea"`
+	SaleType         string             `xml:"TipoCessionePrestazione,omitempty"`
 	Description      string             `xml:"Descrizione"`
-	Quantity         string             `xml:"Quantita"`
+	Quantity         string             `xml:"Quantita,omitempty"`
 	Unit             string             `xml:"UnitaMisura,omitempty"`
 	PeriodStart      string             `xml:"DataInizioPeriodo,omitempty"`
 	PeriodEnd        string             `xml:"DataFinePeriodo,omitempty"`
@@ -103,25 +108,7 @@ func generateLineDetails(inv *bill.Invoice) []*LineDetail {
 			}
 		}
 
-		// Set VAT fields from the VAT combo on the line
-		if vat := line.Taxes.Get(tax.CategoryVAT); vat != nil {
-			d.TaxRate = formatPercentageWithZero(vat.Percent)
-			d.TaxNature = exemptExtensionCode(vat.Ext)
-			if d.TaxNature == naturaN21 && inv.HasTags(tax.TagReverseCharge) {
-				d.OtherData = append(d.OtherData, &OtherData{
-					DataType:      tipoDatoINVCONT,
-					TextReference: riferimentoTestoINVCONT,
-				})
-			}
-		}
-
-		// Check for retained taxes
-		for _, t := range line.Taxes {
-			if t.Ext.Has(sdi.ExtKeyRetained) {
-				d.Retained = flagSI
-				break
-			}
-		}
+		setLineTaxes(inv, d, line.Taxes)
 
 		// Map item attributes to AltriDatiGestionali blocks.
 		d.OtherData = append(d.OtherData, attributesToOtherData(line.Item.Attributes)...)
@@ -129,7 +116,68 @@ func generateLineDetails(inv *bill.Invoice) []*LineDetail {
 		dl = append(dl, d)
 	}
 
+	n := len(inv.Lines)
+	for _, charge := range inv.Charges {
+		if chargeIsLine(charge) {
+			n++
+			dl = append(dl, newAdjustmentLine(inv, n, tipoCessionePrestazioneCharge, chargeDescription(charge), charge.Amount, charge.Taxes))
+		}
+	}
+	for _, discount := range inv.Discounts {
+		if discountIsLine(discount) {
+			n++
+			dl = append(dl, newAdjustmentLine(inv, n, tipoCessionePrestazioneDiscount, discountDescription(discount), discount.Amount.Negate(), discount.Taxes))
+		}
+	}
+
 	return dl
+}
+
+// chargeIsLine reports whether a document charge changes a VAT base. SDI adds
+// up the lines of each VAT rate to check its taxable amount, so the charge has
+// to be one of them.
+func chargeIsLine(charge *bill.Charge) bool {
+	if charge.Key.Has(bill.ChargeKeyStampDuty) || charge.Key.Has(sdi.KeyFundContribution) {
+		return false
+	}
+	return charge.Taxes.Get(tax.CategoryVAT) != nil
+}
+
+// discountIsLine reports whether a document discount changes a VAT base.
+func discountIsLine(discount *bill.Discount) bool {
+	return discount.Taxes.Get(tax.CategoryVAT) != nil
+}
+
+func newAdjustmentLine(inv *bill.Invoice, number int, saleType, description string, amount num.Amount, taxes tax.Set) *LineDetail {
+	d := &LineDetail{
+		LineNumber:  strconv.Itoa(number),
+		SaleType:    saleType,
+		Description: description,
+		UnitPrice:   formatAmount8(&amount),
+		TotalPrice:  formatAmount8(&amount),
+	}
+	setLineTaxes(inv, d, taxes)
+	return d
+}
+
+func setLineTaxes(inv *bill.Invoice, d *LineDetail, taxes tax.Set) {
+	if vat := taxes.Get(tax.CategoryVAT); vat != nil {
+		d.TaxRate = formatPercentageWithZero(vat.Percent)
+		d.TaxNature = exemptExtensionCode(vat.Ext)
+		if d.TaxNature == naturaN21 && inv.HasTags(tax.TagReverseCharge) {
+			d.OtherData = append(d.OtherData, &OtherData{
+				DataType:      tipoDatoINVCONT,
+				TextReference: riferimentoTestoINVCONT,
+			})
+		}
+	}
+
+	for _, t := range taxes {
+		if t.Ext.Has(sdi.ExtKeyRetained) {
+			d.Retained = flagSI
+			break
+		}
+	}
 }
 
 // lineUnit returns the UnitaMisura for an item: the supplier's own wording

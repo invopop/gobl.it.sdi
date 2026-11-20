@@ -1618,3 +1618,73 @@ func TestItemUnitLabelValidation(t *testing.T) {
 		})
 	}
 }
+
+func TestDiscountAndChargeReasonValidation(t *testing.T) {
+	tests := []struct {
+		name    string
+		reason  string
+		withVAT bool
+		valid   bool
+	}{
+		{"Latin-1 reason with VAT", "Sconto fedeltà", true, true},
+		{"reason of 1000 characters with VAT", strings.Repeat("a", 1000), true, true},
+		{"reason outside Latin-1 without VAT", "Sconto – VIP", false, true},
+		{"reason outside Latin-1 with VAT", "Sconto – VIP", true, false},
+		{"reason over 1000 characters with VAT", strings.Repeat("a", 1001), true, false},
+	}
+	for _, tt := range tests {
+		t.Run("discount: "+tt.name, func(t *testing.T) {
+			inv := testInvoiceStandard(t)
+			d := &bill.Discount{Reason: tt.reason, Amount: num.MakeAmount(100, 2)}
+			if tt.withVAT {
+				d.Taxes = inv.Lines[0].Taxes
+			}
+			inv.Discounts = []*bill.Discount{d}
+			require.NoError(t, inv.Calculate())
+			err := rules.Validate(inv)
+			if tt.valid {
+				assert.NoError(t, err)
+				return
+			}
+			assert.ErrorContains(t, err, "discount reason must be at most 1000 Latin-1 characters when the discount has VAT")
+		})
+		t.Run("charge: "+tt.name, func(t *testing.T) {
+			inv := testInvoiceStandard(t)
+			c := &bill.Charge{Reason: tt.reason, Amount: num.MakeAmount(100, 2)}
+			if tt.withVAT {
+				c.Taxes = inv.Lines[0].Taxes
+			}
+			inv.Charges = []*bill.Charge{c}
+			require.NoError(t, inv.Calculate())
+			err := rules.Validate(inv)
+			if tt.valid {
+				assert.NoError(t, err)
+				return
+			}
+			assert.ErrorContains(t, err, "charge reason must be at most 1000 Latin-1 characters when the charge has VAT")
+		})
+	}
+}
+
+func TestStampDutyReasonValidation(t *testing.T) {
+	vat := tax.Set{{Category: tax.CategoryVAT, Rate: "general"}}
+	stampDuty := func() []*bill.Charge {
+		return []*bill.Charge{
+			{Key: bill.ChargeKeyStampDuty, Reason: "Bollo – cliente", Amount: num.MakeAmount(200, 2), Taxes: vat},
+		}
+	}
+
+	t.Run("ordinary invoice with a stamp duty reason outside Latin-1", func(t *testing.T) {
+		inv := testInvoiceStandard(t)
+		inv.Charges = stampDuty()
+		require.NoError(t, inv.Calculate())
+		assert.NoError(t, rules.Validate(inv))
+	})
+
+	t.Run("simplified invoice with a stamp duty reason outside Latin-1", func(t *testing.T) {
+		inv := testInvoiceSimplified(t)
+		inv.Charges = stampDuty()
+		require.NoError(t, inv.Calculate())
+		assert.ErrorContains(t, rules.Validate(inv), "simplified invoice stamp duty reason must be at most 1000 Latin-1 characters")
+	})
+}
